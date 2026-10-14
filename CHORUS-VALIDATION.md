@@ -15,6 +15,7 @@
 - 回归检查共 142 个测试通过：monitor/runtime 10 个、本地化 6 个、Core/Chorus 110 个、CLI 16 个。日志：`.work/test-runtime.log`。SDL 正常退出能力检查使用独立应用实际安装的 Minecraft 26.3 manifest，并验证托管运行设置保留其他配置、已有游戏设置文件保持原样。
 - 检查采用纯函数、实际文件、SQLite、进程和真实 chorusd；上游使用替代依赖的测试不属于本次执行范围。
 - 真实 API 验证了 meta、房间、构建、分支、提交分页和初次 SSE sync。真实 SSE 录制验证事件解码。模组检查下载真实构建产物，验证 SHA256、增删托管文件、保留非托管文件及拒绝已损坏的托管文件。
+- 额外的真实服务切换测试通过：同一 `ChorusEventStream` 在前台 chorusd 切换到 NixOS 服务时依次收到两次 `sync`，自动重新连接完成。日志：`.work/test-reconnect.log`。
 - Git 图检查覆盖合并提交、多个父节点、独立根提交、分页边界及无效拓扑输入；构建状态和日志入口通过编译及真实模型读取验证。
 - 真实 `prepare` 与 `launch --dry-run` 完成：`cfc16eaac-fabric`，generation 3，build `fabric-fc16eaac252b`。独立实例使用 Java 25、Fabric KnotClient、76 个 classpath 文件，QuickPlay 指向服务端返回的房间主机，结果明确包含 `authenticationRequired=true`。
 - 应用打包日志：`.work/build-runtime-app.log`。实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。

@@ -143,7 +143,8 @@ struct ChorusIntegrationTests {
             ?? ChorusTokenStore.load(baseURL: url)
         let client = try ChorusClient(baseURL: url, token: token)
         let builds = try await client.builds()
-        let build = try #require(builds.first { $0.status == .ready })
+        let requested = ProcessInfo.processInfo.environment["CHORUS_IT_BUILD_ID"]
+        let build = try #require(builds.first { $0.status == .ready && (requested == nil || $0.id == requested) })
         let files = try ChorusModSync.clientFiles(build)
         #expect(files.count >= 2)
         let temporary = try #require(ProcessInfo.processInfo.environment["TMPDIR"])
@@ -156,6 +157,9 @@ struct ChorusIntegrationTests {
         let first = try await sync.synchronize(build, instance: instance)
         #expect(first.files == files.map(\.name))
         let mods = paths.configured(with: try StateStore.load(paths)).game(instance.id).appendingPathComponent("mods")
+        for file in build.files where file.side == "server" {
+            #expect(!FileManager.default.fileExists(atPath: mods.appendingPathComponent(file.name).path))
+        }
         let unmanaged = mods.appendingPathComponent("user-owned.jar")
         try FileManager.default.copyItem(at: mods.appendingPathComponent(files[0].name), to: unmanaged)
         let unmanagedHash = try ChorusModSync.digest(unmanaged)

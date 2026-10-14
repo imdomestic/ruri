@@ -13,6 +13,8 @@ struct PreferencesView: View {
     private static let launchLanguage = LocalizationContext.savedLanguage()
     var body: some View {
         Form {
+            // CHORUS: 后端地址与钥匙串凭据。
+            ChorusSettingsView()
             appearance
             launchDefaults
             newInstances

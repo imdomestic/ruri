@@ -3,7 +3,8 @@ import Foundation
 import Security
 
 public enum CurseForgeKeyStore {
-    private static var query: [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "dev.ruri.launcher.services", kSecAttrAccount as String: "curseforge"] }
+    // CHORUS: 独立服务凭据。
+    private static var query: [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "dev.ruri.launcher.chorus.services", kSecAttrAccount as String: "curseforge"] }
     public static var hasBundledKey: Bool { bundledKey() != nil }
     public static func isConfigured() -> Bool { hasCustomKey() || hasBundledKey }
     public static func hasCustomKey() -> Bool {

@@ -16,7 +16,8 @@ let package = Package(
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.8.0"),
         .package(url: "https://github.com/dduan/TOMLDecoder.git", exact: "0.4.5"),
-        .package(url: "https://github.com/sparkle-project/Sparkle.git", exact: "2.10.0")
+        // CHORUS: SSE 使用成熟协议实现。
+        .package(url: "https://github.com/mattt/EventSource.git", exact: "1.4.0")
     ],
     targets: [
         .systemLibrary(name: "CZlib"),
@@ -24,9 +25,9 @@ let package = Package(
         .target(name: "RuriLocalization", resources: [.process("Resources")]),
         .target(name: "RuriSessionKit", dependencies: ["RuriLocalization", "CSQLite", "CZlib"]),
         .target(name: "RuriMonitorRuntime", dependencies: ["RuriSessionKit", "RuriLocalization"]),
-        .target(name: "RuriCore", dependencies: ["RuriSessionKit", "ZIPFoundation", "CZlib", "CSQLite", "RuriLocalization", .product(name: "Markdown", package: "swift-markdown"), "TOMLDecoder"], resources: [.copy("Resources/LoaderSupport"), .copy("Resources/mod_data.txt")]),
-        // Sparkle.framework is embedded in Contents/Frameworks by scripts/build-app.sh.
-        .executableTarget(name: "Ruri", dependencies: ["RuriCore", "RuriLocalization", .product(name: "Sparkle", package: "Sparkle")],
+        .target(name: "RuriCore", dependencies: ["RuriSessionKit", "ZIPFoundation", "CZlib", "CSQLite", "RuriLocalization", .product(name: "Markdown", package: "swift-markdown"), "TOMLDecoder", .product(name: "EventSource", package: "EventSource")], resources: [.copy("Resources/LoaderSupport"), .copy("Resources/mod_data.txt")]),
+        // CHORUS: 应用不包含自动更新组件。
+        .executableTarget(name: "Ruri", dependencies: ["RuriCore", "RuriLocalization"],
                           resources: [.copy("Resources/JavaBrands")],
                           linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]),
         .target(name: "RuriCommandKit", dependencies: ["RuriCore", "RuriLocalization", .product(name: "ArgumentParser", package: "swift-argument-parser")]),

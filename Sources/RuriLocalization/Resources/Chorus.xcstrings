@@ -1,0 +1,564 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "Chorus.backendURL" : {
+      "comment" : "Chorus 后端地址。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backend URL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后端地址"
+          }
+        }
+      }
+    },
+    "Chorus.behindHead" : {
+      "comment" : "分支已更新的状态提示。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Branch has newer commits"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分支已有新提交"
+          }
+        }
+      }
+    },
+    "Chorus.buildLog" : {
+      "comment" : "查看构建日志。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build Log"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "构建日志"
+          }
+        }
+      }
+    },
+    "Chorus.buildOnly" : {
+      "comment" : "只运行构建。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build Only"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅构建"
+          }
+        }
+      }
+    },
+    "Chorus.buildUnavailable" : {
+      "comment" : "目标构建没有可用产物。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The build is unavailable. Check its build log."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "构建尚不可用，请查看构建日志。"
+          }
+        }
+      }
+    },
+    "Chorus.checksumFailed" : {
+      "comment" : "参数为校验失败的文件名。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File verification failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件校验失败：%@"
+          }
+        }
+      }
+    },
+    "Chorus.connectionOK" : {
+      "comment" : "真实 health 与 meta 请求均成功。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接成功"
+          }
+        }
+      }
+    },
+    "Chorus.finished" : {
+      "comment" : "房间人工标签。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已结束"
+          }
+        }
+      }
+    },
+    "Chorus.generationChanged" : {
+      "comment" : "固定房间启动周期已失效。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The room has started a different generation. Join again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "房间已进入新的启动周期，请重新加入。"
+          }
+        }
+      }
+    },
+    "Chorus.git" : {
+      "comment" : "Git 提交页面。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
+          }
+        }
+      }
+    },
+    "Chorus.httpFailure" : {
+      "comment" : "参数为 HTTP 状态码。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus request failed (HTTP %@)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus 请求失败（HTTP %@）。"
+          }
+        }
+      }
+    },
+    "Chorus.invalidResponse" : {
+      "comment" : "响应违反接口契约。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus returned an invalid response."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus 返回了无效响应。"
+          }
+        }
+      }
+    },
+    "Chorus.invalidToken" : {
+      "comment" : "输入 token 格式不合法，不显示内容。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a valid Chorus token."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入有效的 Chorus token。"
+          }
+        }
+      }
+    },
+    "Chorus.invalidURL" : {
+      "comment" : "后端地址与下载来源验证失败。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a valid HTTP or HTTPS Chorus backend address."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请使用有效的 HTTP 或 HTTPS Chorus 后端地址。"
+          }
+        }
+      }
+    },
+    "Chorus.loadMore" : {
+      "comment" : "加载下一页 Git 提交。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load More"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加载更多"
+          }
+        }
+      }
+    },
+    "Chorus.localReady" : {
+      "comment" : "本地实例与全部模组校验完成。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client ready"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "客户端准备完成"
+          }
+        }
+      }
+    },
+    "Chorus.loginNeeded" : {
+      "comment" : "无账号时的真实启动前提示。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to a Microsoft account in Ruri Chorus before joining."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在 Ruri Chorus 中登录 Microsoft 账号后进入房间。"
+          }
+        }
+      }
+    },
+    "Chorus.preparing" : {
+      "comment" : "客户端安装与同步阶段。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing client"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备客户端"
+          }
+        }
+      }
+    },
+    "Chorus.restart" : {
+      "comment" : "使用最新分支提交重新启动房间。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart with Latest Commit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用最新提交重新启动"
+          }
+        }
+      }
+    },
+    "Chorus.roomUnavailable" : {
+      "comment" : "参数为阻止加入的房间状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The room cannot be joined in its current state: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "房间当前状态无法加入：%@"
+          }
+        }
+      }
+    },
+    "Chorus.saved" : {
+      "comment" : "钥匙串设置已保存，不包含凭据。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存"
+          }
+        }
+      }
+    },
+    "Chorus.startTemporary" : {
+      "comment" : "为选定提交启动临时房间。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Temporary Room"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动临时房间"
+          }
+        }
+      }
+    },
+    "Chorus.stop" : {
+      "comment" : "停止房间并保存世界。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Room"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止房间"
+          }
+        }
+      }
+    },
+    "Chorus.temporaryRooms" : {
+      "comment" : "服务器页临时房间分区。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporary Rooms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "临时房间"
+          }
+        }
+      }
+    },
+    "Chorus.testConnection" : {
+      "comment" : "测试真实后端鉴权和健康状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试连接"
+          }
+        }
+      }
+    },
+    "Chorus.testing" : {
+      "comment" : "房间人工标签。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试中"
+          }
+        }
+      }
+    },
+    "Chorus.title" : {
+      "comment" : "产品名称。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus"
+          }
+        }
+      }
+    },
+    "Chorus.token" : {
+      "comment" : "存入钥匙串的 token 输入框。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus Token"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chorus token"
+          }
+        }
+      }
+    },
+    "Chorus.tokenRequired" : {
+      "comment" : "未配置后端 token。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save your Chorus token in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在设置中保存 Chorus token。"
+          }
+        }
+      }
+    },
+    "Chorus.unmanagedConflict" : {
+      "comment" : "用户模组与托管文件同名，保留用户文件。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An unmanaged mod has the same name as a Chorus file. Rename or move it before joining."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非托管模组与 Chorus 文件同名，请调整该文件名称或位置后加入。"
+          }
+        }
+      }
+    },
+    "Chorus.unmanagedMods" : {
+      "comment" : "参数为保留的非托管模组文件名列表。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Additional unmanaged mods: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实例还包含非托管模组：%@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

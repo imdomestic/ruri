@@ -6,7 +6,8 @@ public enum RuriInstallation {
         guard let executable else { return nil }
         var parent = executable.resolvingSymlinksInPath().deletingLastPathComponent()
         for _ in 0..<6 {
-            if parent.pathExtension == "app", let bundle = Bundle(url: parent), bundle.bundleIdentifier == "dev.ruri.launcher" { return parent }
+            // CHORUS: 仅识别独立应用。
+            if parent.pathExtension == "app", let bundle = Bundle(url: parent), bundle.bundleIdentifier == "dev.ruri.launcher.chorus" { return parent }
             parent.deleteLastPathComponent()
         }
         return nil
@@ -29,9 +30,10 @@ public struct CLIInstallation: Sendable {
     public let binDirectory: URL
     private let homeDirectory: URL
     private let migrateLegacyLink: Bool
-    public var link: URL { binDirectory.appendingPathComponent("ruri") }
-    private var receipt: URL { binDirectory.appendingPathComponent(".ruri-cli-install.json") }
-    private var lockFile: URL { binDirectory.appendingPathComponent(".ruri-cli-install.lock") }
+    // CHORUS: 保留原应用的命令与安装凭据。
+    public var link: URL { binDirectory.appendingPathComponent("ruri-chorus") }
+    private var receipt: URL { binDirectory.appendingPathComponent(".ruri-chorus-cli-install.json") }
+    private var lockFile: URL { binDirectory.appendingPathComponent(".ruri-chorus-cli-install.lock") }
     public init(executable: URL? = RuriInstallation.cliExecutable, binDirectory: URL? = nil,
                 homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser) throws {
         guard let executable else { throw OperationFailure("CLI_UNAVAILABLE", Messages.CLIInterface.bundledCliNotFound.localized) }

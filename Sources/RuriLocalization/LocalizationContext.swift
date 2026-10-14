@@ -2,7 +2,8 @@ import Foundation
 
 public struct LocalizationContext: Sendable {
     public static let baseLanguage = "zh-Hans"
-    public static let preferenceDomain = "dev.ruri.launcher"
+    // CHORUS: 独立语言设置。
+    public static let preferenceDomain = "dev.ruri.launcher.chorus"
     public static let systemPreference = "system"
     private static let languagesKey = "AppleLanguages"
     private static let legacyPreferenceKey = "interfaceLanguage"

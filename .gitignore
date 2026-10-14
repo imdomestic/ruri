@@ -8,4 +8,5 @@ references/
 *.xcuserstate
 xcuserdata/
 /.private/
+.work/
 __pycache__/

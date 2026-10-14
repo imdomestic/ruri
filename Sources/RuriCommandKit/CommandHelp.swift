@@ -32,7 +32,8 @@ enum CommandHelp {
     static func signature(_ spec: CommandSpec) -> String {
         let operands = spec.operands.map { $0.required ? "<\($0.name)>" : "[<\($0.name)>]" }
         let required = spec.options.filter { $0.required || ($0.name == "yes" && spec.confirmation) }.map(optionUsage)
-        return (["ruri"] + spec.path + operands + required).joined(separator: " ")
+        // CHORUS: 独立 CLI 名称。
+        return (["ruri-chorus"] + spec.path + operands + required).joined(separator: " ")
     }
 
     static func optionUsage(_ option: ParameterSpec) -> String {
@@ -48,9 +49,10 @@ enum CommandHelp {
         guard commandType(path) != nil else {
             throw OperationFailure("INVALID_ARGUMENT", Messages.CLIExperience.unknownHelp(path.joined(separator: " ")).localized)
         }
-        let matches = CommandRegistry.commands.filter { $0.path.starts(with: path) }
+        // CHORUS: 命令描述与实际执行共用注册信息。
+        let matches = (CommandRegistry.commands + ChorusGroup.specs).filter { $0.path.starts(with: path) }
         let exact = matches.first { $0.path == path }
-        var lines = ["USAGE: " + (exact.map(signature) ?? (["ruri"] + path + ["<subcommand>"]).joined(separator: " ")) + " [options]", ""]
+        var lines = ["USAGE: " + (exact.map(signature) ?? (["ruri-chorus"] + path + ["<subcommand>"]).joined(separator: " ")) + " [options]", ""]
         if path.isEmpty && !all {
             lines += RuriCommand.configuration.subcommands.map { "  " + ($0.configuration.commandName ?? "") + "  " + $0.configuration.abstract }
         } else {

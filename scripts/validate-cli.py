@@ -48,16 +48,16 @@ def validate(app):
 
         assert command([executable, "--version"], env=environment).decode().strip() == info.get("RuriVersion", info["CFBundleShortVersionString"])
         for arguments, usage in [
-            (["--help"], "USAGE: ruri <subcommand>"),
-            (["--help", "app"], "USAGE: ruri app <subcommand>"),
-            (["app", "--help"], "USAGE: ruri app <subcommand>"),
-            (["help", "app"], "USAGE: ruri app <subcommand>"),
-            (["app"], "USAGE: ruri app <subcommand>"),
+            (["--help"], "USAGE: ruri-chorus <subcommand>"),
+            (["--help", "app"], "USAGE: ruri-chorus app <subcommand>"),
+            (["app", "--help"], "USAGE: ruri-chorus app <subcommand>"),
+            (["help", "app"], "USAGE: ruri-chorus app <subcommand>"),
+            (["app"], "USAGE: ruri-chorus app <subcommand>"),
         ]:
             help_text = command([executable, *arguments], env=environment).decode()
             assert usage in help_text and "USAGE: help " not in help_text, help_text
         grouped = command([executable, "help", "instance"], env=environment).decode()
-        assert "ruri instance component set <id>" in grouped and "--component" in grouped
+        assert "ruri-chorus instance component set <id>" in grouped and "--component" in grouped
         assert not re.search(r"[\u3400-\u9fff]", grouped), "CLI help must default to English"
         chinese = command([executable, "help", "instance", "--language", "zh-Hans"], env=environment).decode()
         assert re.search(r"[\u3400-\u9fff]", chinese), "Explicit zh-Hans help must contain Chinese"
@@ -112,10 +112,11 @@ def validate(app):
         bundled = copied / "Contents/Helpers/ruri-cli"
         bin_dir = root / "user bin"
         assert invoke(bundled, "cli", "install", "--bin-dir", bin_dir)["status"]["installed"]
-        link = bin_dir / "ruri"
+        # CHORUS: 验证独立命令链接。
+        link = bin_dir / "ruri-chorus"
         assert Path(invoke(link, "app", "info")["application"]).resolve() == copied.resolve()
         command([link, "--localization-check"])
-        assert "USAGE: ruri app <subcommand>" in command([link, "--help", "app"], env=environment).decode()
+        assert "USAGE: ruri-chorus app <subcommand>" in command([link, "--help", "app"], env=environment).decode()
         moved = root / "Moved Ruri.app"
         shutil.move(copied, moved)
         relocated = moved / "Contents/Helpers/ruri-cli"

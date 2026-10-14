@@ -11,8 +11,9 @@ public struct AccountCredentials: Codable, Sendable {
 }
 
 public enum CredentialStore {
-    private static let service = "dev.ruri.launcher.microsoft"
-    private static let externalService = "dev.ruri.launcher.external"
+    // CHORUS: 账号凭据与原应用隔离。
+    private static let service = "dev.ruri.launcher.chorus.microsoft"
+    private static let externalService = "dev.ruri.launcher.chorus.external"
     public static func save(_ credentials: AccountCredentials, for id: UUID) throws {
         try saveData(JSONEncoder().encode(credentials), for: id, service: service)
     }
@@ -41,11 +42,11 @@ public enum CredentialStore {
         default: return "unavailable"
         }
     }
-    static func saveFlow(_ data: Data, for id: UUID) throws { try saveData(data, for: id, service: "dev.ruri.launcher.login-flow") }
-    static func loadFlow(for id: UUID) throws -> Data { try loadData(for: id, service: "dev.ruri.launcher.login-flow") }
-    static func removeFlow(for id: UUID) throws { try removeData(for: id, service: "dev.ruri.launcher.login-flow") }
+    static func saveFlow(_ data: Data, for id: UUID) throws { try saveData(data, for: id, service: "dev.ruri.launcher.chorus.login-flow") }
+    static func loadFlow(for id: UUID) throws -> Data { try loadData(for: id, service: "dev.ruri.launcher.chorus.login-flow") }
+    static func removeFlow(for id: UUID) throws { try removeData(for: id, service: "dev.ruri.launcher.chorus.login-flow") }
     static func flowIDs() throws -> [UUID] {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "dev.ruri.launcher.login-flow", kSecReturnAttributes as String: true, kSecMatchLimit as String: kSecMatchLimitAll]
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "dev.ruri.launcher.chorus.login-flow", kSecReturnAttributes as String: true, kSecMatchLimit as String: kSecMatchLimitAll]
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecItemNotFound { return [] }

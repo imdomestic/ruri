@@ -77,6 +77,7 @@ enum MessageCatalog {
         result.merge(Messages.CLIExperience.definitions) { first, _ in first }
         result.merge(Messages.CLIInterface.definitions) { first, _ in first }
         result.merge(Messages.CLISetup.definitions) { first, _ in first }
+        result.merge(Messages.Chorus.definitions) { first, _ in first }
         result.merge(Messages.Common.definitions) { first, _ in first }
         result.merge(Messages.ContentDetails.definitions) { first, _ in first }
         result.merge(Messages.ContentImport.definitions) { first, _ in first }

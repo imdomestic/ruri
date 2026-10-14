@@ -101,6 +101,8 @@ public enum CLIApplication {
     }
 
     @MainActor static func execute(_ request: CommandRequest, output: CommandOutput) async throws -> Value {
+        // CHORUS: 独立后端命令。
+        if request.spec.path.first == "chorus" { return try await manageChorus(request, output: output) }
         if request.spec.path.first == "config" { return try configure(request) }
         if request.spec.path.first == "doctor" { return try await doctor(request) }
         if request.spec.path.first == "recovery" { return try await manageRecovery(request, output: output) }

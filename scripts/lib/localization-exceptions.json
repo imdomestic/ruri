@@ -1,5 +1,20 @@
 [
   {
+    "file": "Sources/RuriCore/Infrastructure/Files/LauncherPaths.swift",
+    "literal": "\"Ruri Chorus\"",
+    "reason": "独立应用支持目录的固定名称。"
+  },
+  {
+    "file": "Sources/Ruri/Application/RuriApp.swift",
+    "literal": "\"Ruri Chorus\"",
+    "reason": "独立应用产品名称。"
+  },
+  {
+    "file": "Sources/RuriCore/Chorus/ChorusClient.swift",
+    "literal": "\"Bearer \"",
+    "reason": "HTTP Authorization 认证方案的固定前缀。"
+  },
+  {
     "file": "Sources/Ruri/Features/Accounts/ExternalAccountForm.swift",
     "literal": "\"https://…\"",
     "reason": "Literal URL scheme input hint."

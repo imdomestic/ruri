@@ -3,7 +3,8 @@
 <plist version="1.0"><dict>
   <key>CFBundleName</key><string>Ruri Game</string>
   <key>CFBundleDisplayName</key><string>Ruri Game</string>
-  <key>CFBundleIdentifier</key><string>dev.ruri.game</string>
+  <!-- CHORUS: 游戏宿主与原应用隔离。 -->
+  <key>CFBundleIdentifier</key><string>dev.ruri.launcher.chorus.game</string>
   <key>CFBundleExecutable</key><string>ruri-game</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.10.6</string>

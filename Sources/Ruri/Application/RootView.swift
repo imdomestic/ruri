@@ -16,6 +16,8 @@ struct RootView: View {
     /// Pinned servers on the home page keep their own status rounds.
     @State private var homeServers = ServerNavigationState()
     @State private var accountsNavigation = AccountsNavigationState()
+    // CHORUS: 全应用共享实时房间状态和加入操作。
+    @State private var chorus = ChorusPresentation()
     private var hasCollectionColumn: Bool { model.page == .library || model.page == .accounts || model.page == .servers }
     private let collectionMinimumWidth: CGFloat = 280
     private let collectionToolbarWidth: CGFloat = 420
@@ -84,6 +86,14 @@ struct RootView: View {
             }
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 600)
+        .environment(chorus)
+        .sheet(isPresented: Binding(get: { chorus.joinProgress != nil }, set: { if !$0 { chorus.cancelJoin() } })) {
+            RoomStartingSheet().environment(chorus).interactiveDismissDisabled(chorus.joining)
+        }
+        .sheet(isPresented: Binding(get: { chorus.log != nil && chorus.joinProgress == nil }, set: { if !$0 { chorus.log = nil } })) {
+            ChorusBuildLogSheet().environment(chorus)
+        }
+        .task(id: chorus.configurationRevision) { await chorus.observe(paths: model.basePaths) }
         .sheet(isPresented: Bindable(model).showCLISetup) { CLIOnboardingView() }
         .sheet(isPresented: Bindable(model).showCreate) { CreateInstanceView() }
         .sheet(isPresented: Binding(get: { model.showDirectories || model.showAddDirectory }, set: {

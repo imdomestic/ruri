@@ -12,7 +12,8 @@ import RuriCore
     var installer: GameInstaller { GameInstaller(paths: paths, downloader: downloader) }
     let discovery = CatalogBrowser()
     let catalogRepository = CatalogRepository()
-    var page = Page.home
+    // CHORUS: 服务器列表作为主页面。
+    var page = Page.servers
     var catalog: VersionCatalog?
     var catalogLoading = false
     var catalogError: String?

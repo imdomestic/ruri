@@ -181,10 +181,9 @@ def verify(app, environment):
                    'and certificate 1[field.1.2.840.113635.100.6.2.1] exists '
                    'and certificate leaf[field.1.2.840.113635.100.6.1.12] exists '
                    f'and certificate leaf[subject.OU] = "{team}"')
-    sparkle = app / "Contents/Frameworks/Sparkle.framework"
+    # CHORUS: 核验独立应用实际包含的辅助程序。
     targets = [app, app / "Contents/Helpers/ruri-cli", app / "Contents/Helpers/ruri-monitor", app / "Contents/Helpers/RuriGame.app",
-               app / "Contents/Helpers/RuriGame.app/Contents/Frameworks/libRuriGameSupport.dylib",
-               sparkle, sparkle / "Versions/B/Autoupdate", sparkle / "Versions/B/Updater.app"]
+               app / "Contents/Helpers/RuriGame.app/Contents/Frameworks/libRuriGameSupport.dylib"]
     for target in targets:
         command(["codesign", "--verify", "--all-architectures", "--strict", "-R",
                  "=" + requirement, str(target)], label=f"Signature verification for {target.name}")

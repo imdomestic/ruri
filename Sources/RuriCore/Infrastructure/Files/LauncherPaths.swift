@@ -12,7 +12,8 @@ public struct LauncherPaths: Codable, Sendable, SessionLocationPaths {
     /// Used only while installing an unpublished repository import.
     package var repositoryImportID: UUID?
     public init(root: URL? = nil, directories: [GameDirectory] = [], instanceDirectories: [UUID: UUID] = [:], newInstanceDirectoryID: UUID = GameDirectory.defaultID, instanceRunDirectories: [UUID: GameRunDirectory]? = nil, instanceCustomDirectories: [UUID: CustomRunDirectory]? = nil, instanceRepositoryVersions: [UUID: String]? = nil) {
-        self.root = root ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ruri", isDirectory: true)
+        // CHORUS: GUI 与 CLI 使用独立支持目录。
+        self.root = root ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ruri Chorus", isDirectory: true)
         self.directories = directories; self.instanceDirectories = instanceDirectories; self.newInstanceDirectoryID = newInstanceDirectoryID
         self.instanceRunDirectories = instanceRunDirectories
         self.instanceCustomDirectories = instanceCustomDirectories

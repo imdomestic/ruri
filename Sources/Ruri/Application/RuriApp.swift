@@ -12,7 +12,8 @@ import RuriCore
         _model = State(initialValue: AppModel())
     }
     var body: some Scene {
-        Window("Ruri", id: "main") {
+        // CHORUS: 独立窗口标题。
+        Window("Ruri Chorus", id: "main") {
             MainWindowContent(model: model, updater: updater, lifecycle: lifecycle)
         }
         .defaultSize(width: 1140, height: 780)

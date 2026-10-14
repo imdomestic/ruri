@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleName</key><string>Ruri</string>
-  <key>CFBundleDisplayName</key><string>Ruri</string>
-  <key>CFBundleIdentifier</key><string>dev.ruri.launcher</string>
+  <!-- CHORUS: 独立应用身份。 -->
+  <key>CFBundleName</key><string>Ruri Chorus</string>
+  <key>CFBundleDisplayName</key><string>Ruri Chorus</string>
+  <key>CFBundleIdentifier</key><string>dev.ruri.launcher.chorus</string>
   <key>CFBundleExecutable</key><string>Ruri</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.10.6</string>
   <key>CFBundleVersion</key><string>21</string>
   <key>RuriVersion</key><string>0.10.6</string>
   <key>RuriMicrosoftClientID</key><string>92e3a8ab-0d43-4868-bbc2-58ddcb2081c5</string>
-  <key>SUPublicEDKey</key><string>3hdQ72WKQKvwwiVzOAtxr1H63tX7Gjm7CUTY93U3ij0=</string>
-  <key>RuriAppcastBaseURL</key><string>https://guh0613.github.io/ruri/</string>
-  <key>SUEnableAutomaticChecks</key><true/>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>

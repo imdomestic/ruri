@@ -198,6 +198,8 @@ extension AppModel {
 /// saved in Ruri, as a master–detail page like the library.
 struct ServersView: View {
     @Environment(AppModel.self) private var model
+    // CHORUS: 复用服务器页的列表选择与详情布局。
+    @Environment(ChorusPresentation.self) private var chorus
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.appearsActive) private var appearsActive
     let column: NavigationSplitViewColumn
@@ -280,7 +282,11 @@ struct ServersView: View {
                 await navigation.monitor(items.map(\.address), key: statusKey)
             }
             .onChange(of: filtered.map(\.id), initial: true) { _, ids in
+                if navigation.selectedID?.hasPrefix("chorus:") == true { return }
                 if navigation.selectedID.map(ids.contains) != true { navigation.selectedID = ids.first }
+            }
+            .onChange(of: chorus.rooms.map(\.id), initial: true) { _, ids in
+                if navigation.selectedID == nil, let id = ids.first { navigation.selectedID = "chorus:" + id }
             }
             .onChange(of: model.serverFocus, initial: true) { _, key in
                 guard let key else { return }
@@ -300,6 +306,7 @@ struct ServersView: View {
     /// to set them apart from. Double-clicking a row joins the server.
     private var list: some View {
         List(selection: $navigation.selectedID) {
+            ChorusRoomsSection()
             let pinned = navigation.scope == .all ? filtered.filter { $0.preference?.favorite == true } : []
             if pinned.isEmpty || pinned.count == filtered.count {
                 rows(filtered)
@@ -315,12 +322,15 @@ struct ServersView: View {
         .environment(\.defaultMinListRowHeight, 48)
         .scrollContentBackground(.hidden)
         .overlay {
-            if navigation.snapshot == nil { DelayedProgressView() }
+            if navigation.snapshot == nil && chorus.rooms.isEmpty { DelayedProgressView() }
             else if filtered.isEmpty && !navigation.search.isEmpty { ContentUnavailableView.search(text: navigation.search) }
         }
         .contextMenu(forSelectionType: String.self) { ids in
             if let item = item(ids) { ServerContextActions(item: item, navigation: navigation).labelStyle(.titleAndIcon) }
         } primaryAction: { ids in
+            if let id = ids.first, id.hasPrefix("chorus:"), let room = chorus.rooms.first(where: { "chorus:" + $0.id == id }) {
+                chorus.join(room, model: model); return
+            }
             guard let item = item(ids), let instance = navigation.defaultInstance(for: item, model: model) else { return }
             navigation.join(item, with: instance, model: model)
         }
@@ -350,7 +360,9 @@ struct ServersView: View {
 
     private var detailColumn: some View {
         Group {
-            if navigation.snapshot == nil {
+            if let room = chorus.rooms.first(where: { "chorus:" + $0.id == navigation.selectedID }) {
+                ChorusRoomDetail(room: room)
+            } else if navigation.snapshot == nil {
                 DelayedProgressView()
             } else if items.isEmpty {
                 ContentUnavailableView {

@@ -5,9 +5,9 @@ import RuriLocalization
 
 struct ChorusGroup: ParsableCommand {
     static var configuration: CommandConfiguration {
-        .init(commandName: "chorus", abstract: Messages.Chorus.title.localized, subcommands: [ChorusConfigureCommand.self, ChorusRoomsCommand.self, ChorusBuildsCommand.self, ChorusStartCommand.self, ChorusPrepareCommand.self, ChorusLaunchCommand.self, ChorusBranchesCommand.self, ChorusCommitsCommand.self, ChorusBuildCommand.self, ChorusCreateCommand.self])
+        .init(commandName: "chorus", abstract: Messages.Chorus.title.localized, subcommands: [ChorusConfigureCommand.self, ChorusRoomsCommand.self, ChorusBuildsCommand.self, ChorusBuildLogCommand.self, ChorusStartCommand.self, ChorusPrepareCommand.self, ChorusLaunchCommand.self, ChorusBranchesCommand.self, ChorusCommitsCommand.self, ChorusBuildCommand.self, ChorusCreateCommand.self])
     }
-    static var specs: [CommandSpec] { [ChorusConfigureCommand.spec, ChorusRoomsCommand.spec, ChorusBuildsCommand.spec, ChorusStartCommand.spec, ChorusPrepareCommand.spec, ChorusLaunchCommand.spec, ChorusBranchesCommand.spec, ChorusCommitsCommand.spec, ChorusBuildCommand.spec, ChorusCreateCommand.spec] }
+    static var specs: [CommandSpec] { [ChorusConfigureCommand.spec, ChorusRoomsCommand.spec, ChorusBuildsCommand.spec, ChorusBuildLogCommand.spec, ChorusStartCommand.spec, ChorusPrepareCommand.spec, ChorusLaunchCommand.spec, ChorusBranchesCommand.spec, ChorusCommitsCommand.spec, ChorusBuildCommand.spec, ChorusCreateCommand.spec] }
 }
 
 struct ChorusConfigureCommand: ExecutableCommand {
@@ -32,6 +32,15 @@ struct ChorusBuildsCommand: ExecutableCommand {
     @OptionGroup var common: CommonOptions
     var operands: [String] { [] }
     var parameters: [String: Value] { [:] }
+}
+struct ChorusBuildLogCommand: ExecutableCommand {
+    static var spec: CommandSpec { .init(path: ["chorus", "build-log"], summary: Messages.Chorus.buildLog.localized,
+        operands: [.init(name: "build", type: "string", required: true, help: "build")],
+        options: [.init(name: "token-stdin", type: "bool", required: false, help: Messages.Chorus.token.localized)]) }
+    @OptionGroup var common: CommonOptions
+    @Argument(help: "build") var operands: [String] = []
+    @Flag(name: .customLong("token-stdin"), help: ArgumentHelp(Messages.Chorus.token.localized)) var tokenStdin = false
+    var parameters: [String: Value] { ["token-stdin": .bool(tokenStdin)] }
 }
 struct ChorusStartCommand: ExecutableCommand {
     static var spec: CommandSpec { .init(path: ["chorus", "start"], summary: Messages.Chorus.preparing.localized,
@@ -122,6 +131,10 @@ extension CLIApplication {
         switch request.spec.path.last {
         case "rooms": return try .encode(await client.rooms())
         case "builds": return try .encode(await client.builds())
+        case "build-log":
+            let build = try await client.build(request.operand())
+            let log = try await client.log(build: build.id)
+            return .object(["build": try .encode(build), "log": .string(log)])
         case "branches": return try .encode(await client.branches())
         case "commits": return try .encode(await client.commits(branch: request.required("branch"), before: request.string("before")))
         case "build": return try .encode(await client.createBuild(sha: request.operand(), loader: request.required("loader"), force: request.flag("force")))

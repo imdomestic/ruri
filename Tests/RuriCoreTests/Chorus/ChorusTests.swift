@@ -243,6 +243,24 @@ struct ChorusRecordingTests {
     }
 }
 
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_FAILED_BUILD_RECORDING"] != nil))
+struct ChorusBuildFailureRecordingTests {
+    @Test func recordedProductionFailurePreservesTheDisplayedError() throws {
+        let path = try #require(ProcessInfo.processInfo.environment["CHORUS_FAILED_BUILD_RECORDING"])
+        let build = try JSONDecoder().decode(ChorusBuild.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        #expect(build.id == "fabric-cb7f59da8fe5")
+        #expect(build.status == .failed)
+        #expect(build.attempt == 2)
+        #expect(build.startedAt == nil)
+        #expect(build.files.isEmpty)
+        let error = try #require(build.lastError)
+        #expect(error.code == "build_failed")
+        #expect(error.message.contains("chorus-build@fabric-cb7f59da8fe5.service"))
+        #expect(error.localizedDescription == error.message)
+        #expect(try JSONDecoder().decode(ChorusBuild.self, from: JSONEncoder().encode(build)) == build)
+    }
+}
+
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_GAME_MANIFEST"] != nil))
 struct ChorusGameManifestTests {
     @Test func installedMinecraftSDLManifestSupportsNormalQuit() throws {

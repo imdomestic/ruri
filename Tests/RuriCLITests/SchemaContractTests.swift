@@ -6,7 +6,7 @@ import RuriCore
 
 struct SchemaContractTests {
     @Test func everyDescriptorMatchesTheTypedParser() throws {
-        for spec in CommandRegistry.commands {
+        for spec in CommandRegistry.commands + ChorusGroup.specs {
             var arguments = spec.path + spec.operands.map { _ in "fixture" }
             for option in spec.options {
                 arguments.append("--" + option.name)

@@ -33,7 +33,12 @@ struct ChorusBuildLogSheet: View {
                 Button(Messages.AppRootView.ok.localized) { chorus.log = nil }.keyboardShortcut(.cancelAction)
             }
             ScrollView([.horizontal, .vertical]) {
-                Text(chorus.log ?? "").font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 12) {
+                    if let error = chorus.logBuild?.lastError {
+                        Text(error.code + ": " + error.message).foregroundStyle(.red)
+                    }
+                    Text(chorus.log ?? "")
+                }.font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
             }
         }.padding(20).frame(width: 760, height: 480)
     }

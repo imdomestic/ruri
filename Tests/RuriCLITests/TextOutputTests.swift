@@ -55,6 +55,7 @@ struct TextOutputTests {
         #expect(rendered.contains("Needs repair"))
         #expect(rendered.contains("Access denied"))
         #expect(rendered.contains("--name 'Two words'"))
+        #expect(rendered.contains("ruri-chorus instance list"))
         #expect(rendered.contains("--data-dir '/tmp/ruri fixture' --offset 4"))
         #expect(!rendered.contains("\"items\""))
     }
@@ -70,7 +71,7 @@ struct TextOutputTests {
         #expect(rendered.contains("RECOVERY_REQUIRED"))
         #expect(rendered.contains("first-id"))
         #expect(rendered.contains("recovery-id"))
-        #expect(rendered.contains("ruri recovery apply content 'fixture id' --yes"))
+        #expect(rendered.contains("ruri-chorus recovery apply content 'fixture id' --yes"))
         #expect(!rendered.contains("fixture-secret"))
     }
     @Test func logsAreRawAndProgressIsCoalescedOnlyForText() throws {

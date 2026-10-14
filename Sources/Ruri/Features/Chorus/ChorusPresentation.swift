@@ -14,6 +14,7 @@ import RuriLocalization
     var joinError: String?
     var joining = false
     var log: String?
+    var logBuild: ChorusBuild?
     @ObservationIgnored var client: ChorusClient?
     @ObservationIgnored private var joinTask: Task<Void, Never>?
 
@@ -72,6 +73,13 @@ import RuriLocalization
     }
     func showBuildLog(_ id: String) {
         guard let client else { return }
-        Task { do { log = try await client.log(build: id) } catch { self.error = error.localizedDescription } }
+        Task {
+            do {
+                let build = try await client.build(id)
+                let text = try await client.log(build: id)
+                logBuild = build
+                log = text
+            } catch { self.error = error.localizedDescription }
+        }
     }
 }

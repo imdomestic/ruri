@@ -25,6 +25,6 @@ Chorus 托管实例使用 Java 游戏进程，设置 `macOS.enabled=false`。首
 
 离线测试覆盖状态机、manifest 校验、地址限制、数据隔离；真实联测读取 `CHORUS_IT_URL`，从该 URL 对应的独立钥匙串条目读取 token。`CHORUS_SSE_RECORDING` 指向真实 chorusd 录制数据，用于离线事件解码测试。既有上游中使用替代依赖的测试不纳入本项目的无 mock 验收。
 
-Git 页面从后端读取分支与拓扑排序的提交历史，分页保留父节点连接，展示各 loader 的构建状态并提供日志、构建和临时房间操作。CLI 对应 `chorus branches`、`chorus commits --branch main`、`chorus build <完整 SHA>`、`chorus create <完整 SHA> --branch main`。
+Git 页面从后端读取分支与拓扑排序的提交历史，分页保留父节点连接，展示各 loader 的构建状态并提供日志、构建和临时房间操作。CLI 对应 `chorus branches`、`chorus commits --branch main`、`chorus build <完整 SHA>`、`chorus create <完整 SHA> --branch main`。`chorus build-log <buildId> --token-stdin --json` 查询完整构建状态与原始日志；界面日志窗口同时显示服务端错误。
 
 无人值守联测可以设置 `CHORUS_IT_SSH_HOST=encore`，测试进程通过 BatchMode SSH 从指定 secret 文件读取 linwhite token，在内存中解析并用于真实 API。CLI 的 `chorus prepare` 与 `chorus launch` 支持 `--token-stdin`，凭据通过管道传入。应用凭据保存在钥匙串中。

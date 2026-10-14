@@ -40,7 +40,7 @@ struct CommandTextRenderer {
         if case .array(let actions) = value["nextActions"] {
             for action in actions {
                 if case .array(let command) = action["command"] {
-                    lines.append(Messages.CLIExperience.nextAction(Self.shell(["ruri"] + command.compactMap(\.string))).localized)
+                    lines.append(Messages.CLIExperience.nextAction(Self.shell(["ruri-chorus"] + command.compactMap(\.string))).localized)
                 }
             }
         }
@@ -106,7 +106,7 @@ struct CommandTextRenderer {
         lines.append(Messages.CLIExperience.page(Int64(items.count), Int64(offset)).localized)
         if let total = value["total"].int { lines.append(Messages.CLIExperience.total(Int64(total)).localized) }
         if value["hasMore"] == .bool(true) {
-            var command = ["ruri"] + (request?.spec.path ?? []) + (request?.operands ?? [])
+            var command = ["ruri-chorus"] + (request?.spec.path ?? []) + (request?.operands ?? [])
             if let request {
                 for key in request.options.keys.sorted() where !["offset", "all"].contains(key) {
                     switch request.options[key]! {

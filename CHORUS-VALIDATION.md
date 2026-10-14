@@ -28,4 +28,4 @@
 
 ## 联测设置
 
-临时联测地址为 `http://127.0.0.1:18790`，经 SSH 转发到 encore。生产地址为 `http://encore.inner.imdomestic.com:8790`。Chorus token 保存在独立钥匙串；无人值守 CLI 可以通过 `--token-stdin` 接收，测试可以通过显式配置的 BatchMode SSH 在内存中读取。凭据不进入参数、日志或文档。
+应用当前配置为 `http://encore.inner.imdomestic.com:8790`。服务化之前的联测通过 `http://127.0.0.1:18790` 的 SSH 转发访问 encore。Chorus token 保存在独立钥匙串；无人值守 CLI 可以通过 `--token-stdin` 接收，测试可以通过显式配置的 BatchMode SSH 在内存中读取。凭据不进入参数、日志或文档。

@@ -210,3 +210,17 @@ struct ChorusRecordingTests {
         guard case .sync = events.first else { Issue.record("sync"); return }
     }
 }
+
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_GAME_MANIFEST"] != nil))
+struct ChorusGameManifestTests {
+    @Test func installedMinecraftSDLManifestSupportsNormalQuit() throws {
+        let path = try #require(ProcessInfo.processInfo.environment["CHORUS_GAME_MANIFEST"])
+        let manifest = try JSONDecoder().decode(VersionManifest.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        #expect(manifest.libraries.contains { $0.name.hasPrefix("org.lwjgl:lwjgl-sdl:") })
+        #expect(!manifest.libraries.contains { $0.name.hasPrefix("org.lwjgl:lwjgl-glfw:") })
+        #expect(LaunchBuilder.supportsNativeQuit(manifest))
+        var withoutWindowLibrary = manifest
+        withoutWindowLibrary.libraries.removeAll { $0.name.hasPrefix("org.lwjgl:lwjgl-sdl:") }
+        #expect(!LaunchBuilder.supportsNativeQuit(withoutWindowLibrary))
+    }
+}

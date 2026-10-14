@@ -12,18 +12,18 @@
 ## 已运行的检查
 
 - Debug 构建、应用打包、签名检查、CLI 命令发现、JSON/NDJSON 输出、辅助进程、应用移动后的 CLI 链接检查通过。
-- 回归检查共 139 个测试通过：monitor/runtime 10 个、本地化 6 个、Core/Chorus 107 个、CLI 16 个。日志：`.work/test-regression.log`。
+- 回归检查共 140 个测试通过：monitor/runtime 10 个、本地化 6 个、Core/Chorus 108 个、CLI 16 个。日志：`.work/test-sdl.log`。SDL 正常退出能力检查使用独立应用实际安装的 Minecraft 26.3 manifest。
 - 检查采用纯函数、实际文件、SQLite、进程和真实 chorusd；上游使用替代依赖的测试不属于本次执行范围。
 - 真实 API 验证了 meta、房间、构建、分支、提交分页和初次 SSE sync。真实 SSE 录制验证事件解码。模组检查下载真实构建产物，验证 SHA256、增删托管文件、保留非托管文件及拒绝已损坏的托管文件。
 - Git 图检查覆盖合并提交、多个父节点、独立根提交、分页边界及无效拓扑输入；构建状态和日志入口通过编译及真实模型读取验证。
 - 真实 `prepare` 与 `launch --dry-run` 完成：`cfc16eaac-fabric`，generation 3，build `fabric-fc16eaac252b`。独立实例使用 Java 25、Fabric KnotClient、76 个 classpath 文件，QuickPlay 指向服务端返回的房间主机，结果明确包含 `authenticationRequired=true`。
-- 应用打包日志：`.work/build-p4-app.log`。实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。
+- 应用打包日志：`.work/build-sdl-app.log`。实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。
 
 ## 验收待办
 
 - 用户在 Ruri Chorus 登录 Microsoft 账号后，验证服务器页面自动进入和 Git 页面旧提交临时房间进入。阶段分支保持独立，尚未合入 `dev`。
 - 旧提交的构建与 `prepare`/`dry-run` 验证等待服务端资源验收安排；真实进入仍需要上述登录。
-- Minecraft 26.3 使用 SDL。上游 `nativeQuitSupported` 当前按 `lwjgl-glfw` 判断，因此 `session quit` 可能返回 `appExitRequestDisabled`。Ruri Chorus 尚未验证该版本的正常退出。
+- Minecraft 26.3 的 SDL 已纳入正常退出能力判定。实际 Java 游戏进程接受 `NSRunningApplication.terminate()` 后记录 `Stopping!`，会话结果为 `succeeded`、退出代码 0；该系统请求与 `NativeGameQuit.request` 相同。验证时实例关闭了 `macOS.enabled`，原生 GameHost 模式尚未验证。
 
 ## 联测设置
 

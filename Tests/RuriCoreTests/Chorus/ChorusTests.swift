@@ -88,6 +88,38 @@ struct ChorusTests {
         #expect(install.link.lastPathComponent == "ruri-chorus")
     }
 
+    @Test func chorusRuntimeSettingsPreserveOtherOverrides() {
+        var instance = GameInstance(name: "Chorus", gameVersion: "26.3")
+        var defaults = AppSettings()
+        var macOS = MacOSGameSettings()
+        macOS.instanceAppearance = false
+        macOS.nativeFullscreen = false
+        defaults.defaultMacOSGameSettings = macOS
+        var overrides = InstanceLaunchOverrides()
+        overrides.gameArguments = "--demo"
+        overrides.window = .init(width: 900, height: 600)
+        instance.launchOverrides = overrides
+        let configured = ChorusInstanceManager.applyingRuntimeSettings(to: instance, defaults: defaults, javaMajor: 25)
+        #expect(configured.launchOverrides?.gameArguments == overrides.gameArguments)
+        #expect(configured.launchOverrides?.window == overrides.window)
+        #expect(configured.launchOverrides?.macOS?.enabled == false)
+        #expect(configured.launchOverrides?.macOS?.instanceAppearance == false)
+        #expect(configured.launchOverrides?.macOS?.nativeFullscreen == false)
+        #expect(configured.javaMajor == 25)
+    }
+
+    @Test func initialGameOptionsPreserveExistingFile() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try ChorusInstanceManager.initializeGameOptions(at: directory)
+        let options = directory.appendingPathComponent("options.txt")
+        #expect(try String(contentsOf: options, encoding: .utf8) == "enableVsync:false\nonboardAccessibility:false\npauseOnLostFocus:false\n")
+        let userSettings = Data("enableVsync:true\nfov:0.75\ncustom:value\n".utf8)
+        try userSettings.write(to: options)
+        try ChorusInstanceManager.initializeGameOptions(at: directory)
+        #expect(try Data(contentsOf: options) == userSettings)
+    }
+
     @Test func manifestSideAndNameValidation() throws {
         let file = ChorusBuild.File(name: "chorus.jar", sha256: String(repeating: "a", count: 64), size: 1, side: "both", url: "/v1/deps/sha")
         let server = ChorusBuild.File(name: "hop.jar", sha256: file.sha256, size: 1, side: "server", url: "/v1/deps/sha")
@@ -222,5 +254,32 @@ struct ChorusGameManifestTests {
         var withoutWindowLibrary = manifest
         withoutWindowLibrary.libraries.removeAll { $0.name.hasPrefix("org.lwjgl:lwjgl-sdl:") }
         #expect(!LaunchBuilder.supportsNativeQuit(withoutWindowLibrary))
+    }
+}
+
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_IT_RECONNECT"] == "1"))
+struct ChorusReconnectTests {
+    enum Failure: Error { case timeout, streamEnded }
+
+    @Test func actualServiceRestartResynchronizes() async throws {
+        let url = try ChorusSettings.normalizedURL(#require(ProcessInfo.processInfo.environment["CHORUS_IT_URL"]))
+        let host = try #require(ProcessInfo.processInfo.environment["CHORUS_IT_SSH_HOST"])
+        let client = try ChorusClient(baseURL: url, token: ChorusIntegrationCredentials.read(host: host))
+        try await withThrowingTaskGroup(of: Void.self) { tasks in
+            tasks.addTask {
+                var synchronized = 0
+                for try await event in ChorusEventStream(client: client).events() {
+                    guard case .sync(let value) = event else { continue }
+                    #expect(value.rooms.contains { $0.id == "main-fabric" })
+                    synchronized += 1
+                    print("CHORUS_RECONNECT_SYNC \(synchronized)")
+                    if synchronized == 2 { return }
+                }
+                throw Failure.streamEnded
+            }
+            tasks.addTask { try await Task.sleep(for: .seconds(300)); throw Failure.timeout }
+            defer { tasks.cancelAll() }
+            try await tasks.next()
+        }
     }
 }

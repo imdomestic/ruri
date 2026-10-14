@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import Testing
 import TOMLDecoder
 @testable import RuriCore
@@ -137,6 +138,40 @@ struct ChorusTests {
 
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_IT_URL"] != nil))
 struct ChorusIntegrationTests {
+    @Test func unavailableTCPServiceReportsAConnectionError() async throws {
+        let descriptor = Darwin.socket(AF_INET, SOCK_STREAM, 0)
+        #expect(descriptor >= 0)
+        guard descriptor >= 0 else { return }
+        defer { Darwin.close(descriptor) }
+        var address = sockaddr_in()
+        address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        address.sin_family = sa_family_t(AF_INET)
+        address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+        let bound = withUnsafePointer(to: &address) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                Darwin.bind(descriptor, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        try #require(bound == 0)
+        var length = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let named = withUnsafeMutablePointer(to: &address) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(descriptor, $0, &length) }
+        }
+        try #require(named == 0)
+        // 已保留的 TCP 端口没有监听进程；请求应由系统直接报告连接失败。
+        let url = try #require(URL(string: "http://127.0.0.1:" + String(UInt16(bigEndian: address.sin_port))))
+        let token = UUID().uuidString
+        let client = try ChorusClient(baseURL: url, token: token)
+        do {
+            _ = try await client.meta()
+            Issue.record("An unavailable TCP service responded")
+        } catch let error as URLError {
+            #expect([URLError.cannotConnectToHost, .timedOut].contains(error.code))
+            #expect(!error.localizedDescription.isEmpty)
+            #expect(!error.localizedDescription.contains(token))
+        }
+    }
+
     @Test func realArtifactsSynchronizeAndProtectUnmanagedFiles() async throws {
         let url = try ChorusSettings.normalizedURL(#require(ProcessInfo.processInfo.environment["CHORUS_IT_URL"]))
         let token = try ProcessInfo.processInfo.environment["CHORUS_IT_SSH_HOST"].map { try ChorusIntegrationCredentials.read(host: $0) }

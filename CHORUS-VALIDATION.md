@@ -12,12 +12,13 @@
 ## 已运行的检查
 
 - Debug 构建、应用打包、签名检查、CLI 命令发现、JSON/NDJSON 输出、辅助进程、应用移动后的 CLI 链接检查通过。
-- 回归检查共 142 个测试通过：monitor/runtime 10 个、本地化 6 个、Core/Chorus 110 个、CLI 16 个。日志：`.work/test-runtime.log`、`.work/test-failure-regression.log`。SDL 正常退出能力检查使用独立应用实际安装的 Minecraft 26.3 manifest，并验证托管运行设置保留其他配置、已有游戏设置文件保持原样。
+- 回归检查共 144 个测试通过：monitor/runtime 10 个、本地化 6 个、Core/Chorus 112 个、CLI 16 个。本轮真实 API、录制数据与实际游戏 manifest 检查全部执行，日志：`.work/test-final-regression.log`。SDL 正常退出能力检查使用独立应用实际安装的 Minecraft 26.3 manifest，并验证托管运行设置保留其他配置、已有游戏设置文件保持原样。
 - 检查采用纯函数、实际文件、SQLite、进程和真实 chorusd；上游使用替代依赖的测试不属于本次执行范围。
 - 真实 API 验证了 meta、房间、构建、分支、提交分页和初次 SSE sync。真实 SSE 录制验证事件解码。模组检查下载真实构建产物，验证 SHA256、增删托管文件、保留非托管文件及拒绝已损坏的托管文件。
 - 构建 `fabric-cb7f59da8fe5` attempt 5 的真实 jar 同步测试通过，服务端专用 `chorus-hop` 未进入客户端 mods，托管客户端文件校验与非托管文件保留通过。日志：`.work/test-server-hop.log`；本次检查没有启动房间或游戏客户端。
 - 生产地址 `http://encore.inner.imdomestic.com:8790` 的两个真实联网测试通过，日志：`.work/test-production.log`。额外 41 个检查通过，涵盖 manifest、内存设置、JVM 参数、会话兼容、CLI schema/输出/配置和真实失败构建录制，日志：`.work/test-additional.log`。
 - 额外的真实服务切换测试通过：同一 `ChorusEventStream` 在前台 chorusd 切换到 NixOS 服务时依次收到两次 `sync`，自动重新连接完成。日志：`.work/test-reconnect.log`。
+- 不可达后端检查使用系统保留且未监听的真实 TCP 端口，实际请求返回连接超时并保留可显示的错误消息；界面接入通过编译，错误消息不含凭据。
 - Git 图检查覆盖合并提交、多个父节点、独立根提交、分页边界及无效拓扑输入；构建状态和日志入口通过编译及真实模型读取验证。
 - 真实 `prepare` 与 `launch --dry-run` 完成：`cfc16eaac-fabric`，generation 3，build `fabric-fc16eaac252b`。独立实例使用 Java 25、Fabric KnotClient、76 个 classpath 文件，QuickPlay 指向服务端返回的房间主机，结果明确包含 `authenticationRequired=true`。
 - 旧提交 `cb7f59da8fe55f6862265586db2817be66a63b8e` 的构建、房间 ready、实际模组替换、`prepare` 和 `launch --dry-run` 均完成。房间 `ccb7f59da-fabric` generation 1 使用 build `fabric-cb7f59da8fe5`，启动计划包含对应 QuickPlay 地址。记录：`.work/ruri-old-prepare.json`、`.work/ruri-old-dry-run.json`。

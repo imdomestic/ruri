@@ -2,7 +2,7 @@
 
 独立应用标识为 `dev.ruri.launcher.chorus`，数据目录为 `~/Library/Application Support/Ruri Chorus`。Microsoft 凭据、Chorus token、CLI 安装记录使用独立标识。Sparkle 更新关闭。
 
-接口依据为 chorus-testbed 的 `docs/api.md`。上游为 `https://github.com/guh0613/ruri.git` 的 `dev` 分支；本地修改集中在 `Chorus/` 目录，现有应用的接入位置带有 `CHORUS` 注释。
+接口依据为 chorus-testbed 的 `docs/api.md`。上游为 `https://github.com/guh0613/ruri.git` 的 `main` 分支，本地 `dev` 主线以提交 `4353f8d046a11e59c64ce58e5f4f6ae6ac3e5f6c` 为基线；本地修改集中在 `Chorus/` 目录，现有应用的接入位置带有 `CHORUS` 注释。
 
 构建与打包：
 

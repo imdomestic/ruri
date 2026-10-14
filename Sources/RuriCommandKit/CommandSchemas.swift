@@ -64,6 +64,17 @@ enum CommandSchemas {
     static func sideEffects(_ spec: CommandSpec) -> [String] {
         guard spec.mutation else { return [] }
         switch spec.path.first {
+        // CHORUS: 在命令发现结果中说明后端与本地操作。
+        case "chorus":
+            switch spec.path.last {
+            case "configure": return ["configuration", "credentials"]
+            case "prepare": return ["remoteRooms", "downloads", "gameFiles", "configuration"]
+            case "launch": return ["remoteRooms", "credentials", "downloads", "gameFiles", "process", "sessionHistory"]
+            case "start": return ["remoteRooms", "downloads", "gameFiles", "process", "sessionHistory"]
+            case "build": return ["remoteBuilds"]
+            case "create": return ["remoteRooms"]
+            default: return []
+            }
         case "config": return ["configuration"]
         case "app": return ["preferences"]
         case "cli": return ["symlink"]
@@ -102,6 +113,17 @@ enum CommandSchemas {
     }
     static func payload(_ spec: CommandSpec) -> Value {
         let p = spec.path, action = p.last!, path = p.joined(separator: " ")
+        if p.first == "chorus" {
+            switch action {
+            case "rooms", "builds", "branches", "commits": return array(object([:]))
+            case "configure": return object(["saved": boolean, "message": string, "dryRun": boolean])
+            case "prepare": return object(fields("instanceID,roomID,buildID,javaPath,mainClass,gameDirectory").merging([
+                "generation": integer, "javaMajor": integer, "classpath": array(string), "destinationArguments": array(string),
+                "authenticationRequired": boolean, "unmanagedMods": array(string), "dryRun": boolean
+            ]) { _, value in value })
+            default: return object([:])
+            }
+        }
         if p.first == "config" {
             return action == "get" ? configReport : object(["changed": boolean, "dryRun": boolean, "before": configReport, "after": configReport])
         }

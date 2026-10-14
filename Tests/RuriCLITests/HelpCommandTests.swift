@@ -5,14 +5,14 @@ import Testing
 @MainActor struct HelpCommandTests {
     @Test func rootAndNestedHelpPreserveTheRequestedCommandContext() async throws {
         let cases: [([String], String)] = [
-            ([], "ruri"), (["--help"], "ruri"), (["-h"], "ruri"), (["help"], "ruri"),
-            (["--help", "app"], "ruri app"), (["app", "--help"], "ruri app"),
-            (["-h", "app"], "ruri app"), (["--quiet", "--help", "app"], "ruri app"),
-            (["help", "app"], "ruri app"), (["app"], "ruri app"),
-            (["app", "language"], "ruri app language"),
-            (["help", "app", "language"], "ruri app language"),
-            (["--help", "world", "backup", "restore"], "ruri world backup restore"),
-            (["world", "backup", "restore", "-h"], "ruri world backup restore")
+            ([], "ruri-chorus"), (["--help"], "ruri-chorus"), (["-h"], "ruri-chorus"), (["help"], "ruri-chorus"),
+            (["--help", "app"], "ruri-chorus app"), (["app", "--help"], "ruri-chorus app"),
+            (["-h", "app"], "ruri-chorus app"), (["--quiet", "--help", "app"], "ruri-chorus app"),
+            (["help", "app"], "ruri-chorus app"), (["app"], "ruri-chorus app"),
+            (["app", "language"], "ruri-chorus app language"),
+            (["help", "app", "language"], "ruri-chorus app language"),
+            (["--help", "world", "backup", "restore"], "ruri-chorus world backup restore"),
+            (["world", "backup", "restore", "-h"], "ruri-chorus world backup restore")
         ]
         for (arguments, command) in cases {
             let output = CommandCapture()
@@ -29,12 +29,12 @@ import Testing
         defer { try? FileManager.default.removeItem(at: root) }
         let state = root.appendingPathComponent("state.json"), original = Data("invalid state".utf8)
         try original.write(to: state)
-        for spec in CommandRegistry.commands {
+        for spec in CommandRegistry.commands + ChorusGroup.specs {
             let output = CommandCapture()
             let status = await CLIApplication.run(["--data-dir", root.path] + spec.path + ["--help"], write: output.write)
             let help = String(decoding: output.output, as: UTF8.self)
             #expect(status == 0, "\(spec.path): \(help)")
-            #expect(help.contains("USAGE: ruri " + spec.path.joined(separator: " ") + " "))
+            #expect(help.contains("USAGE: ruri-chorus " + spec.path.joined(separator: " ") + " "))
             for option in spec.options { #expect(help.contains("--" + option.name), "\(spec.path): \(option.name)") }
             #expect(help.contains("--json"))
             #expect(output.errors.isEmpty)

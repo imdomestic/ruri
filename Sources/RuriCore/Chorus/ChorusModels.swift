@@ -72,7 +72,11 @@ public struct ChorusBuild: Codable, Identifiable, Equatable, Sendable {
 
 public struct ChorusLease: Codable, Equatable, Sendable { public let id: String; public let generation: Int; public let expiresAt: String }
 public struct ChorusStartResult: Codable, Sendable { public let room: ChorusRoom; public let lease: ChorusLease }
-public struct ChorusBuildSummary: Codable, Equatable, Sendable { public let id: String; public let status: ChorusBuildStatus }
+public struct ChorusBuildSummary: Codable, Equatable, Sendable {
+    public let id: String
+    public let status: ChorusBuildStatus
+    public init(id: String, status: ChorusBuildStatus) { self.id = id; self.status = status }
+}
 public struct ChorusBranch: Codable, Identifiable, Equatable, Sendable {
     public var id: String { name }
     public let name: String

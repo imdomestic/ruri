@@ -42,8 +42,23 @@ private struct ChorusRoomRow: View {
 
 struct ChorusStateBadge: View {
     let state: String
+    static func title(_ state: String) -> String {
+        switch state {
+        case "stopped": Messages.Chorus.stateStopped.localized
+        case "queued": Messages.Chorus.stateQueued.localized
+        case "building": Messages.Chorus.stateBuilding.localized
+        case "starting": Messages.Chorus.stateStarting.localized
+        case "ready": Messages.Chorus.stateReady.localized
+        case "stopping": Messages.Chorus.stateStopping.localized
+        case "archiving": Messages.Chorus.stateArchiving.localized
+        case "closed": Messages.Chorus.stateClosed.localized
+        case "failed": Messages.Chorus.stateFailed.localized
+        case "lost": Messages.Chorus.stateLost.localized
+        default: Messages.Chorus.unbuilt.localized
+        }
+    }
     var body: some View {
-        Text(state).font(.caption2).fontWeight(.medium).padding(.horizontal, 6).padding(.vertical, 3)
+        Text(Self.title(state)).font(.caption2).fontWeight(.medium).padding(.horizontal, 6).padding(.vertical, 3)
             .background(color.opacity(0.15), in: Capsule()).foregroundStyle(color)
     }
     private var color: Color {

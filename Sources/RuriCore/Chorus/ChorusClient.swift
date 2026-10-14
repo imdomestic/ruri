@@ -19,7 +19,7 @@ public struct ChorusClient: Sendable {
         configuration.timeoutIntervalForRequest = 30
         configuration.timeoutIntervalForResource = 3600
         configuration.urlCache = nil
-        self.session = URLSession(configuration: configuration)
+        self.session = URLSession(configuration: configuration, delegate: ChorusRedirectPolicy(baseURL: self.baseURL), delegateQueue: nil)
     }
     public func request(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = []) throws -> URLRequest {
         guard let resolved = URL(string: path, relativeTo: baseURL)?.absoluteURL,
@@ -90,5 +90,16 @@ public struct ChorusClient: Sendable {
     public func createRoom(sha: String, loader: String, branch: String) async throws -> ChorusRoom {
         let body = try JSONEncoder().encode(["kind": "commit", "sha": sha, "loader": loader, "seed": "branch:" + branch])
         return try JSONDecoder().decode(ChorusRoom.self, from: await data("/v1/rooms", method: "POST", body: body))
+    }
+}
+
+private final class ChorusRedirectPolicy: NSObject, URLSessionTaskDelegate, Sendable {
+    let baseURL: URL
+    init(baseURL: URL) { self.baseURL = baseURL }
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void) {
+        guard let url = request.url, url.scheme == baseURL.scheme, url.host == baseURL.host, url.port == baseURL.port,
+              url.user == nil, url.password == nil, url.path.hasPrefix("/v1/") else { completionHandler(nil); return }
+        completionHandler(request)
     }
 }

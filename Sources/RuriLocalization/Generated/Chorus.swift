@@ -135,6 +135,66 @@ extension Messages {
         public static var startTemporary: LocalizedMessage {
             .init(key: "Chorus.startTemporary", table: "Chorus", fallback: "启动临时房间")
         }
+        /// 正在归档
+        ///
+        /// Resource: `Chorus.Chorus.stateArchiving`.
+        public static var stateArchiving: LocalizedMessage {
+            .init(key: "Chorus.stateArchiving", table: "Chorus", fallback: "正在归档")
+        }
+        /// 正在构建
+        ///
+        /// Resource: `Chorus.Chorus.stateBuilding`.
+        public static var stateBuilding: LocalizedMessage {
+            .init(key: "Chorus.stateBuilding", table: "Chorus", fallback: "正在构建")
+        }
+        /// 已经关闭
+        ///
+        /// Resource: `Chorus.Chorus.stateClosed`.
+        public static var stateClosed: LocalizedMessage {
+            .init(key: "Chorus.stateClosed", table: "Chorus", fallback: "已经关闭")
+        }
+        /// 操作失败
+        ///
+        /// Resource: `Chorus.Chorus.stateFailed`.
+        public static var stateFailed: LocalizedMessage {
+            .init(key: "Chorus.stateFailed", table: "Chorus", fallback: "操作失败")
+        }
+        /// 节点失联
+        ///
+        /// Resource: `Chorus.Chorus.stateLost`.
+        public static var stateLost: LocalizedMessage {
+            .init(key: "Chorus.stateLost", table: "Chorus", fallback: "节点失联")
+        }
+        /// 正在排队
+        ///
+        /// Resource: `Chorus.Chorus.stateQueued`.
+        public static var stateQueued: LocalizedMessage {
+            .init(key: "Chorus.stateQueued", table: "Chorus", fallback: "正在排队")
+        }
+        /// 已经就绪
+        ///
+        /// Resource: `Chorus.Chorus.stateReady`.
+        public static var stateReady: LocalizedMessage {
+            .init(key: "Chorus.stateReady", table: "Chorus", fallback: "已经就绪")
+        }
+        /// 正在启动
+        ///
+        /// Resource: `Chorus.Chorus.stateStarting`.
+        public static var stateStarting: LocalizedMessage {
+            .init(key: "Chorus.stateStarting", table: "Chorus", fallback: "正在启动")
+        }
+        /// 已经停止
+        ///
+        /// Resource: `Chorus.Chorus.stateStopped`.
+        public static var stateStopped: LocalizedMessage {
+            .init(key: "Chorus.stateStopped", table: "Chorus", fallback: "已经停止")
+        }
+        /// 正在停止
+        ///
+        /// Resource: `Chorus.Chorus.stateStopping`.
+        public static var stateStopping: LocalizedMessage {
+            .init(key: "Chorus.stateStopping", table: "Chorus", fallback: "正在停止")
+        }
         /// 停止房间
         ///
         /// Resource: `Chorus.Chorus.stop`.
@@ -177,6 +237,12 @@ extension Messages {
         public static var tokenRequired: LocalizedMessage {
             .init(key: "Chorus.tokenRequired", table: "Chorus", fallback: "请在设置中保存 Chorus token。")
         }
+        /// 尚未构建
+        ///
+        /// Resource: `Chorus.Chorus.unbuilt`.
+        public static var unbuilt: LocalizedMessage {
+            .init(key: "Chorus.unbuilt", table: "Chorus", fallback: "尚未构建")
+        }
         /// 非托管模组与 Chorus 文件同名，请调整该文件名称或位置后加入。
         ///
         /// Resource: `Chorus.Chorus.unmanagedConflict`.
@@ -212,6 +278,16 @@ extension Messages {
             "Chorus:Chorus.roomUnavailable": .init("房间当前状态无法加入：%@", [.text]),
             "Chorus:Chorus.saved": .init("已保存", []),
             "Chorus:Chorus.startTemporary": .init("启动临时房间", []),
+            "Chorus:Chorus.stateArchiving": .init("正在归档", []),
+            "Chorus:Chorus.stateBuilding": .init("正在构建", []),
+            "Chorus:Chorus.stateClosed": .init("已经关闭", []),
+            "Chorus:Chorus.stateFailed": .init("操作失败", []),
+            "Chorus:Chorus.stateLost": .init("节点失联", []),
+            "Chorus:Chorus.stateQueued": .init("正在排队", []),
+            "Chorus:Chorus.stateReady": .init("已经就绪", []),
+            "Chorus:Chorus.stateStarting": .init("正在启动", []),
+            "Chorus:Chorus.stateStopped": .init("已经停止", []),
+            "Chorus:Chorus.stateStopping": .init("正在停止", []),
             "Chorus:Chorus.stop": .init("停止房间", []),
             "Chorus:Chorus.temporaryRooms": .init("临时房间", []),
             "Chorus:Chorus.testConnection": .init("测试连接", []),
@@ -219,6 +295,7 @@ extension Messages {
             "Chorus:Chorus.title": .init("Chorus", []),
             "Chorus:Chorus.token": .init("Chorus token", []),
             "Chorus:Chorus.tokenRequired": .init("请在设置中保存 Chorus token。", []),
+            "Chorus:Chorus.unbuilt": .init("尚未构建", []),
             "Chorus:Chorus.unmanagedConflict": .init("非托管模组与 Chorus 文件同名，请调整该文件名称或位置后加入。", []),
             "Chorus:Chorus.unmanagedMods": .init("实例还包含非托管模组：%@", [.text]),
         ]

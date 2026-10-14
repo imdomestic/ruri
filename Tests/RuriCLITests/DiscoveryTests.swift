@@ -7,7 +7,7 @@ import Testing
         let output = CommandCapture()
         #expect(await CLIApplication.run(["help", "--all"], write: output.write) == 0)
         let text = String(decoding: output.output, as: UTF8.self)
-        for spec in CommandRegistry.commands { #expect(text.contains(CommandHelp.signature(spec))) }
+        for spec in CommandRegistry.commands + ChorusGroup.specs { #expect(text.contains(CommandHelp.signature(spec))) }
         #expect(output.output.count < 35_000)
         #expect(!text.contains("resultSchema"))
         #expect(text.components(separatedBy: "--data-dir").count == 2)
@@ -21,7 +21,7 @@ import Testing
             for option in spec.options { #expect(text.contains("--" + option.name)) }
             for example in spec.examples { #expect(text.contains(example)) }
         }
-        #expect(!text.contains("ruri account add-offline"))
+        #expect(!text.contains("ruri-chorus account add-offline"))
         let config = CommandCapture()
         #expect(await CLIApplication.run(["help", "config"], write: config.write) == 0)
         #expect(String(decoding: config.output, as: UTF8.self).contains("memory.maximumMB: integer (512…131072)"))

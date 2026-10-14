@@ -42,7 +42,7 @@ public struct ChorusInstanceManager: Sendable {
         try ChorusSettings.update(paths: paths) { settings in
             if let id = settings.instances[key], try StateStore.load(paths).instances.contains(where: { $0.id == id }) { instanceID = id }
             else {
-                let name = ["Chorus", build.loader, minecraft].joined(separator: " · ")
+                let name = ["Chorus", build.loader + " " + minecraft].joined(separator: " · ")
                 let instance = try InstanceService(paths: paths).create(name: name, game: minecraft, selections: [.init(loader: loader, version: version)], directoryID: GameDirectory.defaultID)
                 instanceID = instance.id; settings.instances[key] = instance.id
             }

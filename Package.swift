@@ -35,7 +35,7 @@ let package = Package(
         .executableTarget(name: "RuriMonitor", dependencies: ["RuriMonitorRuntime", "RuriLocalization"]),
         .testTarget(name: "RuriMonitorRuntimeTests", dependencies: ["RuriMonitorRuntime", "RuriSessionKit", "RuriLocalization"]),
         .testTarget(name: "RuriSessionKitTests", dependencies: ["RuriSessionKit"]),
-        .testTarget(name: "RuriCoreTests", dependencies: ["RuriCore", "RuriMonitorRuntime", "RuriLocalization"]),
+        .testTarget(name: "RuriCoreTests", dependencies: ["RuriCore", "RuriMonitorRuntime", "RuriLocalization", "TOMLDecoder"]),
         .testTarget(name: "RuriLocalizationTests", dependencies: ["RuriLocalization"]),
         .testTarget(name: "RuriCLITests", dependencies: ["RuriCommandKit", "RuriCore"])
     ]

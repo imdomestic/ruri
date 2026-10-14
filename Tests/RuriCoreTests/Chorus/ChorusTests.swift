@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TOMLDecoder
 @testable import RuriCore
 
 struct ChorusTests {
@@ -104,9 +105,55 @@ struct ChorusTests {
 
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_IT_URL"] != nil))
 struct ChorusIntegrationTests {
+    @Test func realArtifactsSynchronizeAndProtectUnmanagedFiles() async throws {
+        let url = try ChorusSettings.normalizedURL(#require(ProcessInfo.processInfo.environment["CHORUS_IT_URL"]))
+        let token = try ProcessInfo.processInfo.environment["CHORUS_IT_SSH_HOST"].map { try ChorusIntegrationCredentials.read(host: $0) }
+            ?? ChorusTokenStore.load(baseURL: url)
+        let client = try ChorusClient(baseURL: url, token: token)
+        let builds = try await client.builds()
+        let build = try #require(builds.first { $0.status == .ready })
+        let files = try ChorusModSync.clientFiles(build)
+        #expect(files.count >= 2)
+        let temporary = try #require(ProcessInfo.processInfo.environment["TMPDIR"])
+        let root = URL(fileURLWithPath: temporary).appendingPathComponent("chorus-sync-" + UUID().uuidString)
+        let paths = LauncherPaths(root: root)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let instance = try InstanceService(paths: paths).create(name: "Chorus artifact verification", game: #require(build.minecraft),
+            selections: [.init(loader: .fabric, version: #require(build.loaderVersion))], directoryID: GameDirectory.defaultID)
+        let sync = ChorusModSync(paths: paths, client: client)
+        let first = try await sync.synchronize(build, instance: instance)
+        #expect(first.files == files.map(\.name))
+        let mods = paths.configured(with: try StateStore.load(paths)).game(instance.id).appendingPathComponent("mods")
+        let unmanaged = mods.appendingPathComponent("user-owned.jar")
+        try FileManager.default.copyItem(at: mods.appendingPathComponent(files[0].name), to: unmanaged)
+        let unmanagedHash = try ChorusModSync.digest(unmanaged)
+        // 文件子集来自真实构建；远端下载与本地事务使用完整实现。
+        let subset = ChorusBuild(id: build.id, sha: build.sha, loader: build.loader, status: build.status, attempt: build.attempt,
+            queuedAt: build.queuedAt, startedAt: build.startedAt, finishedAt: build.finishedAt, minecraft: build.minecraft,
+            loaderVersion: build.loaderVersion, java: build.java, builtAt: build.builtAt, durationSec: build.durationSec,
+            modIds: build.modIds, files: [files[0]], log: build.log, lastError: build.lastError)
+        let reduced = try await sync.synchronize(subset, instance: instance)
+        #expect(reduced.unmanaged == [unmanaged.lastPathComponent])
+        for file in files.dropFirst() { #expect(!FileManager.default.fileExists(atPath: mods.appendingPathComponent(file.name).path)) }
+        _ = try await sync.synchronize(build, instance: instance)
+        for file in files { try ChorusModSync.verify(mods.appendingPathComponent(file.name), file: file) }
+        #expect(try ChorusModSync.digest(unmanaged) == unmanagedHash)
+        let receipt = try Data(contentsOf: mods.appendingPathComponent(".chorus-managed.json"))
+        let changed = mods.appendingPathComponent(files[0].name)
+        let handle = try FileHandle(forWritingTo: changed)
+        try handle.seekToEnd(); try handle.write(contentsOf: Data([0])); try handle.close()
+        await #expect(throws: (any Error).self) { try await sync.synchronize(build, instance: instance) }
+        #expect(try Data(contentsOf: mods.appendingPathComponent(".chorus-managed.json")) == receipt)
+        #expect(try ChorusModSync.digest(unmanaged) == unmanagedHash)
+    }
+
     @Test func liveModelsAndInitialSynchronization() async throws {
         let url = try ChorusSettings.normalizedURL(#require(ProcessInfo.processInfo.environment["CHORUS_IT_URL"]))
-        let client = try ChorusClient(baseURL: url, token: ChorusTokenStore.load(baseURL: url))
+        let token: String
+        if let host = ProcessInfo.processInfo.environment["CHORUS_IT_SSH_HOST"] {
+            token = try ChorusIntegrationCredentials.read(host: host)
+        } else { token = try ChorusTokenStore.load(baseURL: url) }
+        let client = try ChorusClient(baseURL: url, token: token)
         let meta = try await client.meta()
         #expect(meta.minecraft == "26.3")
         #expect(meta.loaders.contains("fabric"))
@@ -116,9 +163,41 @@ struct ChorusIntegrationTests {
         #expect(branches.contains { $0.name == "main" })
         let commits = try await client.commits(branch: "main")
         #expect(!commits.isEmpty)
+        let graph = try ChorusCommitGraph.layout(commits.map { .init(sha: $0.sha, parents: $0.parents) })
+        #expect(graph.count == commits.count)
+        if let last = commits.last {
+            let next = try await client.commits(branch: "main", before: last.sha)
+            #expect(Set(next.map(\.sha)).isDisjoint(with: Set(commits.map(\.sha))))
+            _ = try ChorusCommitGraph.layout((commits + next).map { .init(sha: $0.sha, parents: $0.parents) })
+        }
         var iterator = ChorusEventStream(client: client).events().makeAsyncIterator()
         guard case .sync(let sync) = try await iterator.next() else { Issue.record("sync"); return }
         #expect(sync.rooms.contains { $0.id == "main-fabric" })
+    }
+}
+
+private enum ChorusIntegrationCredentials {
+    enum Failure: Error { case sshFailed, invalidDocument, missingUser }
+    static func read(host: String) throws -> String {
+        let process = Process(), output = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
+        let file = ProcessInfo.processInfo.environment["CHORUS_IT_SECRETS_FILE"] ?? "/var/lib/chorusd/secrets/users.toml"
+        guard file.hasPrefix("/"), !file.contains("\n"), !file.contains("\0") else { throw Failure.invalidDocument }
+        let quoted = "'" + file.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        process.arguments = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, "sudo -n cat -- " + quoted]
+        process.standardInput = FileHandle.nullDevice
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        let data = try output.fileHandleForReading.readToEnd() ?? Data()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { throw Failure.sshFailed }
+        struct Users: Decodable { let users: [String: String] }
+        let users: Users
+        do { users = try TOMLDecoder().decode(Users.self, from: data) }
+        catch { throw Failure.invalidDocument }
+        guard let token = users.users["linwhite"] else { throw Failure.missingUser }
+        return token
     }
 }
 

@@ -11,6 +11,7 @@ public enum ChorusEvent: Sendable {
     case git
 
     public static func decode(name: String, data: String) throws -> Self? {
+        guard !data.isEmpty else { return nil }
         let bytes = Data(data.utf8), decoder = JSONDecoder()
         switch name {
         case "sync": return .sync(try decoder.decode(ChorusSync.self, from: bytes))
@@ -47,6 +48,7 @@ public struct ChorusEventStream: Sendable {
                         var synchronized = false
                         for try await event in bytes.events {
                             try Task.checkCancellation()
+                            guard !event.data.isEmpty else { continue }
                             guard synchronized || event.event == "sync" else { throw RuriError.message(Messages.Chorus.invalidResponse) }
                             synchronized = true
                             retries = 0

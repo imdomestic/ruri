@@ -397,6 +397,186 @@
         }
       }
     },
+    "Chorus.stateArchiving" : {
+      "comment" : "房间归档状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archiving"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在归档"
+          }
+        }
+      }
+    },
+    "Chorus.stateBuilding" : {
+      "comment" : "构建状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在构建"
+          }
+        }
+      }
+    },
+    "Chorus.stateClosed" : {
+      "comment" : "房间关闭状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经关闭"
+          }
+        }
+      }
+    },
+    "Chorus.stateFailed" : {
+      "comment" : "房间或构建失败。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作失败"
+          }
+        }
+      }
+    },
+    "Chorus.stateLost" : {
+      "comment" : "房间节点失联。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Node Unreachable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "节点失联"
+          }
+        }
+      }
+    },
+    "Chorus.stateQueued" : {
+      "comment" : "等待资源或构建。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在排队"
+          }
+        }
+      }
+    },
+    "Chorus.stateReady" : {
+      "comment" : "房间或构建就绪。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经就绪"
+          }
+        }
+      }
+    },
+    "Chorus.stateStarting" : {
+      "comment" : "房间启动状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在启动"
+          }
+        }
+      }
+    },
+    "Chorus.stateStopped" : {
+      "comment" : "房间停止状态。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经停止"
+          }
+        }
+      }
+    },
+    "Chorus.stateStopping" : {
+      "comment" : "房间停止过程。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopping"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在停止"
+          }
+        }
+      }
+    },
     "Chorus.stop" : {
       "comment" : "停止房间并保存世界。",
       "extractionState" : "manual",
@@ -519,6 +699,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请在设置中保存 Chorus token。"
+          }
+        }
+      }
+    },
+    "Chorus.unbuilt" : {
+      "comment" : "提交尚无构建。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Built"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未构建"
           }
         }
       }

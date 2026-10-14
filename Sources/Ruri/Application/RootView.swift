@@ -73,6 +73,7 @@ struct RootView: View {
                         switch model.page {
                         case .home, .library, .accounts, .servers: HomeView(servers: homeServers)
                         case .discover: DiscoverView()
+                        case .git: ChorusGitView()
                         case .history: GameHistoryView(cache: historyCache, instanceID: model.historyInstanceID)
                         case .activity: LauncherLogView().id(model.logNavigationID)
                         case .java: JavaView()
@@ -183,7 +184,7 @@ private struct RootSidebar: View {
         // row emphasis tied to the selection from the sidebar's creation.
         NavigationStack {
             List(selection: $model.page) {
-                Section { ForEach([Page.home, .library, .servers, .discover]) { page in sidebarRow(page) } }
+                Section { ForEach([Page.home, .library, .servers, .git, .discover]) { page in sidebarRow(page) } }
                 Section(Messages.AppRootView.records.localized) { ForEach([Page.history, .activity]) { page in sidebarRow(page) } }
                 Section(Messages.AppRootView.manage.localized) { ForEach([Page.accounts, .java, .settings]) { page in sidebarRow(page) } }
             }

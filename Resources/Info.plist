@@ -14,6 +14,16 @@
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <!-- CHORUS: 私有后端与本地 SSH 转发使用 HTTP。 -->
+  <key>NSAppTransportSecurity</key><dict>
+    <key>NSAllowsLocalNetworking</key><true/>
+    <key>NSExceptionDomains</key><dict>
+      <key>encore.inner.imdomestic.com</key><dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+      <key>100.64.0.43</key><dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+      <key>10.1.2.137</key><dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+      <key>127.0.0.1</key><dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>
+    </dict>
+  </dict>
   <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
   <key>LSSupportsGameMode</key><false/>
   <key>CFBundleDevelopmentRegion</key><string>zh-Hans</string>

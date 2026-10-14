@@ -54,7 +54,7 @@ public struct ChorusInstanceManager: Sendable {
         if !instance.installed { instance = try await InstanceService(paths: paths).install(instanceID, downloader: downloader, progress: progress) }
         try StateStore.updateIfChanged(paths) { state in
             guard let index = state.instances.firstIndex(where: { $0.id == instanceID }) else { throw RuriError.message(Messages.Chorus.invalidResponse) }
-            state.instances[index].javaMajor = major
+            state.instances[index] = Self.applyingRuntimeSettings(to: state.instances[index], defaults: state.settings, javaMajor: major)
             instance = state.instances[index]
         }
         let configured = paths.configured(with: try StateStore.load(paths))
@@ -75,6 +75,26 @@ public struct ChorusInstanceManager: Sendable {
         }
         let result = try await ChorusModSync(paths: paths, client: client).synchronize(build, instance: instance)
         return ChorusPreparedInstance(instance: instance, java: java, unmanagedMods: result.unmanaged)
+    }
+
+    static func applyingRuntimeSettings(to instance: GameInstance, defaults: AppSettings, javaMajor: Int) -> GameInstance {
+        var result = instance
+        var overrides = instance.effectiveLaunchOverrides
+        var macOS = instance.resolvedLaunchSettings(defaults: defaults).macOS
+        macOS.enabled = false
+        overrides.macOS = macOS
+        result.launchOverrides = overrides
+        result.macOSGameSettings = macOS
+        result.javaMajor = javaMajor
+        return result
+    }
+
+    static func initializeGameOptions(at directory: URL) throws {
+        let options = try LauncherPaths.safePath("options.txt", within: directory)
+        guard !FileManager.default.fileExists(atPath: options.path) else { return }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let initial = "enableVsync:false\nonboardAccessibility:false\npauseOnLostFocus:false\n"
+        try Data(initial.utf8).write(to: options, options: .withoutOverwriting)
     }
 }
 

@@ -21,6 +21,8 @@ scripts/build-app.sh debug --build-system swiftbuild
 
 启动操作固定目标房间的 generation 和 buildId，服务端 ready 与本地文件准备全部满足后只启动一次。托管模组通过 SHA256 校验并原子交换目录；非托管模组保留并提示。取消加入操作会撤销该操作取得的租约。
 
+Chorus 托管实例使用 Java 游戏进程，设置 `macOS.enabled=false`。首次创建游戏设置文件时关闭 VSync、辅助功能引导和失去焦点暂停；已有游戏设置文件保持原样，其他实例设置继续保留。
+
 离线测试覆盖状态机、manifest 校验、地址限制、数据隔离；真实联测读取 `CHORUS_IT_URL`，从该 URL 对应的独立钥匙串条目读取 token。`CHORUS_SSE_RECORDING` 指向真实 chorusd 录制数据，用于离线事件解码测试。既有上游中使用替代依赖的测试不纳入本项目的无 mock 验收。
 
 Git 页面从后端读取分支与拓扑排序的提交历史，分页保留父节点连接，展示各 loader 的构建状态并提供日志、构建和临时房间操作。CLI 对应 `chorus branches`、`chorus commits --branch main`、`chorus build <完整 SHA>`、`chorus create <完整 SHA> --branch main`。

@@ -42,6 +42,7 @@ public struct ChorusModSync: Sendable {
         let state = try StateStore.load(paths), configured = paths.configured(with: state)
         let lease = try GameRunLease.acquire(paths: configured, instanceID: instance.id)
         defer { withExtendedLifetime(lease) {} }
+        try ChorusInstanceManager.initializeGameOptions(at: configured.game(instance.id))
         let directory = configured.game(instance.id).appendingPathComponent("mods")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let receiptURL = directory.appendingPathComponent(".chorus-managed.json")

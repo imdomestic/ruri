@@ -18,12 +18,12 @@
 - 额外的真实服务切换测试通过：同一 `ChorusEventStream` 在前台 chorusd 切换到 NixOS 服务时依次收到两次 `sync`，自动重新连接完成。日志：`.work/test-reconnect.log`。
 - Git 图检查覆盖合并提交、多个父节点、独立根提交、分页边界及无效拓扑输入；构建状态和日志入口通过编译及真实模型读取验证。
 - 真实 `prepare` 与 `launch --dry-run` 完成：`cfc16eaac-fabric`，generation 3，build `fabric-fc16eaac252b`。独立实例使用 Java 25、Fabric KnotClient、76 个 classpath 文件，QuickPlay 指向服务端返回的房间主机，结果明确包含 `authenticationRequired=true`。
+- 旧提交 `cb7f59da8fe55f6862265586db2817be66a63b8e` 的构建、房间 ready、实际模组替换、`prepare` 和 `launch --dry-run` 均完成。房间 `ccb7f59da-fabric` generation 1 使用 build `fabric-cb7f59da8fe5`，启动计划包含对应 QuickPlay 地址。记录：`.work/ruri-old-prepare.json`、`.work/ruri-old-dry-run.json`。
 - 应用打包日志：`.work/build-runtime-app.log`。实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。
 
 ## 验收待办
 
 - 用户在 Ruri Chorus 登录 Microsoft 账号后，验证服务器页面自动进入和 Git 页面旧提交临时房间进入。阶段分支保持独立，尚未合入 `dev`。
-- 旧提交的构建与 `prepare`/`dry-run` 验证等待服务端资源验收安排；真实进入仍需要上述登录。
 - Minecraft 26.3 的 SDL 已纳入正常退出能力判定。实际 Java 游戏进程接受 `NSRunningApplication.terminate()` 后记录 `Stopping!`，会话结果为 `succeeded`、退出代码 0；该系统请求与 `NativeGameQuit.request` 相同。Chorus 托管实例使用已验证的 `macOS.enabled=false` 设置，首次创建游戏设置时关闭 VSync、辅助功能引导和失去焦点暂停。
 
 ## 联测设置

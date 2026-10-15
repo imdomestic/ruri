@@ -29,9 +29,9 @@
 - 实际生产构建 `fabric-cb7f59da8fe5` attempt 2 的失败状态通过独立应用 CLI 读取；返回 `failed`、完整 `build_failed` 错误及原始日志，记录：`.work/ruri-failed-build-log.json`。真实录制模型测试验证错误字段保持完整，界面在日志窗口显示该字段。
 - 实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。
 
-## 验收待办
+## 真实进入验收
 
-- 用户在 Ruri Chorus 登录 Microsoft 账号后，验证服务器页面自动进入和 Git 页面旧提交临时房间进入。阶段分支保持独立，尚未合入 `dev`。
+- 用户确认使用最终签名版本，从服务器页成功进入 main-fabric，并在退出后从 Git 页选择旧提交 cb7f59da，成功进入对应临时房间。
 - Minecraft 26.3 的 SDL 已纳入正常退出能力判定。实际 Java 游戏进程接受 `NSRunningApplication.terminate()` 后记录 `Stopping!`，会话结果为 `succeeded`、退出代码 0；该系统请求与 `NativeGameQuit.request` 相同。Chorus 托管实例使用已验证的 `macOS.enabled=false` 设置，首次创建游戏设置时关闭 VSync、辅助功能引导和失去焦点暂停。
 
 ## 联测设置

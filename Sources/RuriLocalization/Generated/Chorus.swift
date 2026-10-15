@@ -105,11 +105,35 @@ extension Messages {
         public static var loginNeeded: LocalizedMessage {
             .init(key: "Chorus.loginNeeded", table: "Chorus", fallback: "请在 Ruri Chorus 中登录 Microsoft 账号后进入房间。")
         }
+        /// encore 剩余空间为 %@，低于 20 GiB。
+        ///
+        /// Resource: `Chorus.Chorus.lowDiskSpace`.
+        public static func lowDiskSpace(_ value0: String) -> LocalizedMessage {
+            .init(key: "Chorus.lowDiskSpace", table: "Chorus", fallback: "encore 剩余空间为 %@，低于 20 GiB。", arguments: [.text(value0)])
+        }
         /// 正在准备客户端
         ///
         /// Resource: `Chorus.Chorus.preparing`.
         public static var preparing: LocalizedMessage {
             .init(key: "Chorus.preparing", table: "Chorus", fallback: "正在准备客户端")
+        }
+        /// 最近关闭
+        ///
+        /// Resource: `Chorus.Chorus.recentlyClosed`.
+        public static var recentlyClosed: LocalizedMessage {
+            .init(key: "Chorus.recentlyClosed", table: "Chorus", fallback: "最近关闭")
+        }
+        /// 刷新 Chorus
+        ///
+        /// Resource: `Chorus.Chorus.refresh`.
+        public static var refresh: LocalizedMessage {
+            .init(key: "Chorus.refresh", table: "Chorus", fallback: "刷新 Chorus")
+        }
+        /// 重新开启并加入
+        ///
+        /// Resource: `Chorus.Chorus.reopen`.
+        public static var reopen: LocalizedMessage {
+            .init(key: "Chorus.reopen", table: "Chorus", fallback: "重新开启并加入")
         }
         /// 使用最新提交重新启动
         ///
@@ -128,6 +152,12 @@ extension Messages {
         /// Resource: `Chorus.Chorus.saved`.
         public static var saved: LocalizedMessage {
             .init(key: "Chorus.saved", table: "Chorus", fallback: "已保存")
+        }
+        /// 此 Chorus 实例与非托管实例共用游戏目录，请设置独立游戏目录后启动。
+        ///
+        /// Resource: `Chorus.Chorus.sharedDirectory`.
+        public static var sharedDirectory: LocalizedMessage {
+            .init(key: "Chorus.sharedDirectory", table: "Chorus", fallback: "此 Chorus 实例与非托管实例共用游戏目录，请设置独立游戏目录后启动。")
         }
         /// 启动临时房间
         ///
@@ -273,10 +303,15 @@ extension Messages {
             "Chorus:Chorus.loadMore": .init("加载更多", []),
             "Chorus:Chorus.localReady": .init("客户端准备完成", []),
             "Chorus:Chorus.loginNeeded": .init("请在 Ruri Chorus 中登录 Microsoft 账号后进入房间。", []),
+            "Chorus:Chorus.lowDiskSpace": .init("encore 剩余空间为 %@，低于 20 GiB。", [.text]),
             "Chorus:Chorus.preparing": .init("正在准备客户端", []),
+            "Chorus:Chorus.recentlyClosed": .init("最近关闭", []),
+            "Chorus:Chorus.refresh": .init("刷新 Chorus", []),
+            "Chorus:Chorus.reopen": .init("重新开启并加入", []),
             "Chorus:Chorus.restart": .init("使用最新提交重新启动", []),
             "Chorus:Chorus.roomUnavailable": .init("房间当前状态无法加入：%@", [.text]),
             "Chorus:Chorus.saved": .init("已保存", []),
+            "Chorus:Chorus.sharedDirectory": .init("此 Chorus 实例与非托管实例共用游戏目录，请设置独立游戏目录后启动。", []),
             "Chorus:Chorus.startTemporary": .init("启动临时房间", []),
             "Chorus:Chorus.stateArchiving": .init("正在归档", []),
             "Chorus:Chorus.stateBuilding": .init("正在构建", []),

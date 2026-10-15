@@ -307,6 +307,24 @@
         }
       }
     },
+    "Chorus.lowDiskSpace" : {
+      "comment" : "参数为 encore 根分区剩余可用空间。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "encore has %@ free. Disk space is below 20 GiB."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "encore 剩余空间为 %@，低于 20 GiB。"
+          }
+        }
+      }
+    },
     "Chorus.preparing" : {
       "comment" : "客户端安装与同步阶段。",
       "extractionState" : "manual",
@@ -321,6 +339,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在准备客户端"
+          }
+        }
+      }
+    },
+    "Chorus.recentlyClosed" : {
+      "comment" : "最近七天内关闭的临时房间。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recently Closed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近关闭"
+          }
+        }
+      }
+    },
+    "Chorus.refresh" : {
+      "comment" : "从 Git 远端刷新分支并重新加载 Chorus 数据。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh Chorus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新 Chorus"
+          }
+        }
+      }
+    },
+    "Chorus.reopen" : {
+      "comment" : "重新开启已关闭的临时房间并加入。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reopen and Join"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新开启并加入"
           }
         }
       }
@@ -375,6 +447,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已保存"
+          }
+        }
+      }
+    },
+    "Chorus.sharedDirectory" : {
+      "comment" : "启动清理遇到与非托管实例共用的游戏目录。",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Chorus instance shares its game directory with an unmanaged instance. Choose a separate game directory before launching."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Chorus 实例与非托管实例共用游戏目录，请设置独立游戏目录后启动。"
           }
         }
       }

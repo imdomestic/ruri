@@ -36,6 +36,7 @@ public struct ChorusRoom: Codable, Identifiable, Equatable, Sendable {
     public let lastError: ChorusAPIError?
     public let createdAt: String
     public let updatedAt: String
+    public var closedAt: String? = nil
     public struct Player: Codable, Equatable, Sendable { public let name: String; public let uuid: String }
     public struct Seed: Codable, Equatable, Sendable { public let kind: String; public let id: String?; public let rev: String? }
 }
@@ -102,6 +103,19 @@ public struct ChorusMeta: Codable, Sendable {
     public let publicBaseURL: String
     public let limits: Limits
     public struct Limits: Codable, Sendable { public let buildConcurrency: Int; public let buildCacheSize: Int; public let maxRunning: [String: Int] }
+}
+public struct ChorusNode: Codable, Identifiable, Equatable, Sendable {
+    public var id: String { name }
+    public let name: String
+    public let ready: Bool
+    public let schedulable: Bool
+    public let maxRunning: Int
+    public let rooms: [String]
+    public let rootFreeBytes: Int64?
+    public static let diskWarningThreshold: Int64 = 20 * 1024 * 1024 * 1024
+    public var hasLowDiskSpace: Bool {
+        name == "encore" && rootFreeBytes.map { $0 < Self.diskWarningThreshold } == true
+    }
 }
 public struct ChorusAsset: Codable, Identifiable, Sendable {
     public let id: String

@@ -14,6 +14,7 @@ public struct ServerEntry: Identifiable, Equatable, Sendable {
     public let address: String
     public let resourcePacks: ServerResourcePacks
     public let icon: Data?
+    public var hidden: Bool = false
     public var endpoint: ServerAddress? { try? ServerAddress(address) }
 }
 
@@ -49,7 +50,8 @@ public struct ServerListManager: Sendable {
             let resource = fields.first { $0.name == "acceptTextures" && $0.type == 1 }?.value.integer
             let icon = value("icon")?.string.flatMap { $0.utf8.count <= 1_048_576 ? Data(base64Encoded: $0) : nil }
             return ServerEntry(id: index, name: value("name")?.string ?? "", address: value("ip")?.string ?? "",
-                               resourcePacks: resource.map { $0 == 0 ? .never : .always } ?? .ask, icon: icon)
+                               resourcePacks: resource.map { $0 == 0 ? .never : .always } ?? .ask, icon: icon,
+                               hidden: value("hidden")?.integer.map { $0 != 0 } ?? false)
         }
         let revision = data.map { SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined() } ?? "missing"
         return .init(directory: directory, entries: entries, revision: revision, original: data, document: document)
@@ -84,6 +86,24 @@ public struct ServerListManager: Sendable {
             try require(id); try require(target)
             let row = document.entries.remove(at: id); document.entries.insert(row, at: target)
         }
+        try write(document, replacing: snapshot, dryRun: dryRun)
+        return try self.snapshot()
+    }
+    // 调用方 GameSessionRecorder 在整个准备期间持有实例启动租约。
+    func chorusCleanupPlanDuringPreparation(policy: ChorusServerPolicy, state: PersistentState) throws -> ChorusServerCleanupPlan? {
+        guard policy.managedInstanceIDs.contains(instanceID) else { return nil }
+        let directory = paths.game(instanceID).standardizedFileURL.resolvingSymlinksInPath().path
+        for instance in state.instances where !policy.managedInstanceIDs.contains(instance.id) {
+            guard paths.game(instance.id).standardizedFileURL.resolvingSymlinksInPath().path != directory else {
+                throw RuriError.message(Messages.Chorus.sharedDirectory)
+            }
+        }
+        let snapshot = try snapshot()
+        return try ChorusServerCleanupPlan(zones: policy.zones, directory: snapshot.directory)
+    }
+    private func write(_ document: ServerNBTDocument, replacing snapshot: ServerListSnapshot, dryRun: Bool) throws {
+        guard paths.game(instanceID).standardizedFileURL.resolvingSymlinksInPath().path == snapshot.directory.path,
+              try read() == snapshot.original else { throw RuriError.message(Messages.Servers.listChanged) }
         let updated = try document.encoded()
         if !dryRun {
             try FileManager.default.createDirectory(at: paths.game(instanceID), withIntermediateDirectories: true)
@@ -95,7 +115,6 @@ public struct ServerListManager: Sendable {
             guard try read() == snapshot.original else { throw RuriError.message(Messages.Servers.listChanged) }
             try updated.write(to: file, options: .atomic)
         }
-        return try self.snapshot()
     }
     private func read() throws -> Data? {
         let file = try LauncherPaths.safePath("servers.dat", within: paths.game(instanceID))

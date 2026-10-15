@@ -50,7 +50,8 @@ public struct ServerLibrarySnapshot: Sendable {
 }
 
 public enum ServerLibrary {
-    public static func load(paths: LauncherPaths, state: PersistentState) -> ServerLibrarySnapshot {
+    public static func load(paths: LauncherPaths, state: PersistentState) throws -> ServerLibrarySnapshot {
+        let chorus = try ChorusServerPolicy(settings: ChorusSettings.load(paths: paths))
         let paths = paths.configured(with: state)
         var items: [String: ServerLibraryItem] = [:], lists: [UUID: ServerListSnapshot] = [:], errors: [UUID: String] = [:]
         var directories: [String: ServerListSnapshot] = [:]
@@ -86,7 +87,7 @@ public enum ServerLibrary {
         } catch { historyError = error.localizedDescription }
         // Break name ties by key: dictionary order changes between loads, and
         // an unstable order would reshuffle rows and restart status queries.
-        let sorted = items.values.sorted { first, second in
+        let sorted = items.values.filter { !chorus.hides($0) }.sorted { first, second in
             let order = first.name.localizedStandardCompare(second.name)
             return order == .orderedSame ? first.id < second.id : order == .orderedAscending
         }

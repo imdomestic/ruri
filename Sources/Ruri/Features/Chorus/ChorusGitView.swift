@@ -39,6 +39,14 @@ struct ChorusGitView: View {
                 }
             }.frame(minWidth: 400, maxWidth: .infinity)
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    Task { await chorus.refresh(paths: model.basePaths) }
+                } label: { Label(Messages.Chorus.refresh.localized, systemImage: "arrow.clockwise") }
+                    .disabled(chorus.refreshing || chorus.client == nil)
+            }
+        }
         .task(id: chorus.configurationRevision) { await refreshBranches() }
         .task(id: branch) { await loadHistory(append: false) }
         .task(id: chorus.gitRevision) {
@@ -162,7 +170,7 @@ struct ChorusGitView: View {
             do {
                 if launch {
                     let room = try await client.createRoom(sha: commit.sha, loader: loader, branch: branch)
-                    chorus.upsert(room)
+                    try chorus.upsert(room)
                     chorus.join(room, model: model)
                 } else {
                     let value = try await client.createBuild(sha: commit.sha, loader: loader)

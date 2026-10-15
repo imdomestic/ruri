@@ -2,6 +2,8 @@
 
 2026-10-15，Xcode 26.6、Swift 6.3.3、macOS SDK 26.5。构建使用 `--build-system swiftbuild`，临时目录为仓库中的 `.work/tmp`。
 
+第三轮实际验证见 [2026-10-15-round3.md](docs/reports/2026-10-15-round3.md)：通用列表过滤、启动和正常退出后的文件清理、关闭房间重新开启、真实 GitHub 手动及后台刷新、磁盘字段和签名打包均通过。原有五个服务器地址的历史完整保留。
+
 ## 应用与数据
 
 - 应用：`build/Ruri Chorus.app`；标识：`dev.ruri.launcher.chorus`；CLI：`Contents/Helpers/ruri-cli`。
@@ -31,7 +33,7 @@
 
 ## 真实进入验收
 
-- 用户确认最终签名版本的 GUI 使用过程中没有重复钥匙串授权；指定进入 main-fabric 和旧提交 cb7f59da 的目的地验收待核验。
+- 用户确认最终签名版本的 GUI 使用过程中没有重复钥匙串授权。真实房间目的地、服务器加入日志、SLP 和正常退出通过 CLI 验收；第三轮记录包含旧提交房间重新开启后的完整证据。
 - Minecraft 26.3 的 SDL 已纳入正常退出能力判定。实际 Java 游戏进程接受 `NSRunningApplication.terminate()` 后记录 `Stopping!`，会话结果为 `succeeded`、退出代码 0；该系统请求与 `NativeGameQuit.request` 相同。Chorus 托管实例使用已验证的 `macOS.enabled=false` 设置，首次创建游戏设置时关闭 VSync、辅助功能引导和失去焦点暂停。
 
 ## 联测设置

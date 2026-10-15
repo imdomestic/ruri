@@ -7,8 +7,16 @@ struct ChorusRoomsSection: View {
     @Environment(ChorusPresentation.self) private var chorus
     @Environment(AppModel.self) private var model
     @State private var expanded = false
+    @State private var closedExpanded = false
     var body: some View {
-        Section(Messages.Chorus.title.localized) {
+        Section {
+            ForEach(chorus.nodes.filter(\.hasLowDiskSpace)) { node in
+                if let bytes = node.rootFreeBytes {
+                    Label(Messages.Chorus.lowDiskSpace(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .binary)).localized,
+                          systemImage: "externaldrive.badge.exclamationmark")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+            }
             ForEach(chorus.rooms.filter { $0.kind == "branch" }) { room in
                 ChorusRoomRow(room: room).tag("chorus:" + room.id)
             }
@@ -21,6 +29,21 @@ struct ChorusRoomsSection: View {
                 DisclosureGroup(Messages.Chorus.temporaryRooms.localized, isExpanded: $expanded) {
                     ForEach(temporary) { room in ChorusRoomRow(room: room).tag("chorus:" + room.id) }
                 }
+            }
+            if !chorus.recentlyClosed.isEmpty {
+                DisclosureGroup(Messages.Chorus.recentlyClosed.localized, isExpanded: $closedExpanded) {
+                    ForEach(chorus.recentlyClosed) { room in ChorusRoomRow(room: room).tag("chorus:" + room.id) }
+                }
+            }
+        } header: {
+            HStack {
+                Text(Messages.Chorus.title.localized)
+                Spacer()
+                Button {
+                    Task { await chorus.refresh(paths: model.basePaths) }
+                } label: { Label(Messages.Chorus.refresh.localized, systemImage: "arrow.clockwise").labelStyle(.iconOnly) }
+                    .buttonStyle(.borderless).disabled(chorus.refreshing || chorus.client == nil)
+                    .help(Messages.Chorus.refresh.localized)
             }
         }
     }
@@ -82,8 +105,8 @@ struct ChorusRoomDetail: View {
                     Spacer(); ChorusStateBadge(state: room.state.rawValue)
                 }
                 HStack {
-                    Button(Messages.Servers.joinButton.localized) { chorus.join(room, model: model) }
-                        .buttonStyle(.borderedProminent).disabled(chorus.joining || model.busy || room.label == "finished")
+                    Button(room.state == .closed ? Messages.Chorus.reopen.localized : Messages.Servers.joinButton.localized) { chorus.join(room, model: model) }
+                        .buttonStyle(.borderedProminent).disabled(chorus.joining || model.busy || (room.label == "finished" && room.state != .closed))
                     Button(Messages.Servers.copyAddress.localized) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(room.host + ":" + String(room.port), forType: .string)

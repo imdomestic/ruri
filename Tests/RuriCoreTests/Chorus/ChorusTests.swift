@@ -228,7 +228,17 @@ struct ChorusIntegrationTests {
         let meta = try await client.meta()
         #expect(meta.minecraft == "26.3")
         #expect(meta.loaders.contains("fabric"))
-        _ = try await client.rooms()
+        let rooms = try await client.rooms()
+        let nodes = try await client.nodes()
+        #expect(nodes.contains { $0.name == "encore" })
+        if ProcessInfo.processInfo.environment["CHORUS_IT_ROUND3"] == "1" {
+            #expect(nodes.first { $0.name == "encore" }?.rootFreeBytes != nil)
+            #expect(rooms.filter { $0.state == .closed }.allSatisfy { $0.closedAt != nil })
+            let recent = try ChorusServerPolicy.recentlyClosed(rooms)
+            #expect(recent.count <= 10)
+            try await client.refreshGit()
+            #expect(try await client.meta().zone == meta.zone)
+        }
         _ = try await client.builds()
         let branches = try await client.branches()
         #expect(branches.contains { $0.name == "main" })
@@ -269,6 +279,95 @@ private enum ChorusIntegrationCredentials {
         catch { throw Failure.invalidDocument }
         guard let token = users.users["linwhite"] else { throw Failure.missingUser }
         return token
+    }
+}
+
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_REOPEN_IT_ROOM"] != nil))
+struct ChorusReopenIntegrationTests {
+    @Test func explicitReopeningRestoresAClosedFinishedRoom() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let id = try #require(environment["CHORUS_REOPEN_IT_ROOM"])
+        let url = try ChorusSettings.normalizedURL(#require(environment["CHORUS_IT_URL"]))
+        let client = try ChorusClient(baseURL: url, token: ChorusIntegrationCredentials.read(host: #require(environment["CHORUS_IT_SSH_HOST"])))
+        let original = try await client.room(id)
+        try #require(original.state == .closed)
+        #expect(try ChorusServerPolicy.recentlyClosed(await client.rooms()).contains { $0.id == id })
+        _ = try await client.label(id, finished: true)
+        do {
+            _ = try await client.start(id)
+            Issue.record("普通启动应保留已结束房间的限制")
+        } catch let error as ChorusHTTPError {
+            #expect(error.api?.code == "room_finished")
+        }
+        let reopened = try await client.reopen(id)
+        #expect(reopened.room.generation == original.generation + 1)
+        #expect(reopened.room.label == "testing")
+        #expect(reopened.room.closedAt == nil)
+        print("CHORUS_REOPEN room=\(id) previousGeneration=\(original.generation) generation=\(reopened.room.generation)")
+    }
+}
+
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["CHORUS_REFRESH_IT_ROOT"] != nil))
+struct ChorusGitRefreshIntegrationTests {
+    private struct Users: Decodable { let users: [String: String] }
+    private struct Published: Decodable { let completedAtUTC: String }
+    private enum Failure: Error { case timeout, streamEnded }
+
+    private func publication(_ file: URL) async throws -> Date {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(180))
+        while !FileManager.default.fileExists(atPath: file.path) {
+            guard ContinuousClock.now < deadline else { throw Failure.timeout }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        let value = try JSONDecoder().decode(Published.self, from: Data(contentsOf: file))
+        return try Date.ISO8601FormatStyle(includingFractionalSeconds: value.completedAtUTC.contains(".")).parse(value.completedAtUTC)
+    }
+
+    @Test(.timeLimit(.minutes(4)), arguments: ["manual", "periodic"])
+    func realGitHubMoveRefreshesTheClientThroughSSE(mode: String) async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let root = URL(fileURLWithPath: try #require(environment["CHORUS_REFRESH_IT_ROOT"]))
+        let directory = root.appendingPathComponent(mode)
+        let users = try TOMLDecoder().decode(Users.self, from: Data(contentsOf: directory.appendingPathComponent("users.toml")))
+        let url = try ChorusSettings.normalizedURL(#require(environment["CHORUS_REFRESH_IT_" + mode.uppercased() + "_URL"]))
+        let expected = try #require(environment["CHORUS_REFRESH_IT_SHA"])
+        let publishedFile = URL(fileURLWithPath: try #require(environment["CHORUS_REFRESH_IT_PUBLISHED"]))
+        let client = try ChorusClient(baseURL: url, token: #require(users.users["integration"]))
+        let branch = "feat/round3"
+        let baseline = try #require(try await client.branches().first { $0.name == branch })
+        try #require(baseline.head != expected)
+        var iterator = ChorusEventStream(client: client).events().makeAsyncIterator()
+        guard case .sync = try await iterator.next() else { throw Failure.streamEnded }
+        try Data(baseline.head.utf8).write(to: directory.appendingPathComponent("ruri-ready"), options: .atomic)
+        var refreshedAt: Date?
+        if mode == "manual" {
+            _ = try await publication(publishedFile)
+            refreshedAt = Date()
+            try await client.refreshGit()
+        }
+        while let event = try await iterator.next() {
+            guard case .git = event else { continue }
+            async let branches = client.branches()
+            async let commits = client.commits(branch: branch)
+            let values = try await (branches, commits)
+            guard values.0.contains(where: { $0.name == branch && $0.head == expected }),
+                  values.1.contains(where: { $0.sha == expected }) else { continue }
+            let observed = Date()
+            let published = try await publication(publishedFile)
+            let fromPush = observed.timeIntervalSince(published)
+            #expect(fromPush >= 0 && fromPush <= 60)
+            var result: [String: String] = ["mode": mode, "sha": expected, "pushToObservedSeconds": String(fromPush), "trigger": "git SSE"]
+            if let refreshedAt {
+                let fromRefresh = observed.timeIntervalSince(refreshedAt)
+                #expect(fromRefresh <= 10)
+                result["refreshToObservedSeconds"] = String(fromRefresh)
+            }
+            let data = try JSONEncoder().encode(result)
+            try data.write(to: directory.appendingPathComponent("ruri-result.json"), options: .atomic)
+            print("CHORUS_REFRESH " + String(decoding: data, as: UTF8.self))
+            return
+        }
+        throw Failure.streamEnded
     }
 }
 

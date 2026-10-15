@@ -21,7 +21,7 @@ extension CLIApplication {
                 let snapshot = try ServerListManager(paths: paths, instanceID: id).snapshot()
                 return request.page(snapshot.entries.filter { matchesServer($0.name, $0.address, request: request) }.map(serverEntryValue))
             }
-            let library = ServerLibrary.load(paths: paths, state: state)
+            let library = try ServerLibrary.load(paths: paths, state: state)
             var result = request.page(library.items.filter { matchesServer($0.name, $0.address.authority, request: request) }.map { item in
                 .object(["id": .string(item.id), "address": .string(item.address.authority), "name": .string(item.name), "favorite": .bool(item.preference?.favorite == true), "saved": .bool(item.preference?.saved == true),
                          "instanceIDs": .array(item.instanceIDs.map { .string($0.uuidString) }), "notes": .string(item.preference?.notes ?? ""), "preferredInstanceID": .text(item.preference?.preferredInstanceID?.uuidString)])

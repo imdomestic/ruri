@@ -23,8 +23,10 @@ public struct ChorusLaunchCoordinator: Sendable {
         case renewed(ChorusStartResult)
     }
 
-    public func prepare(roomID: String, progress: @escaping @Sendable (ChorusJoinProgress) async -> Void = { _ in }) async throws -> ChorusPreparedJoin {
-        let initial = try await client.start(roomID)
+    public func prepare(roomID: String, reopeningClosedRoom: Bool = false, progress: @escaping @Sendable (ChorusJoinProgress) async -> Void = { _ in }) async throws -> ChorusPreparedJoin {
+        let initial: ChorusStartResult
+        if reopeningClosedRoom { initial = try await client.reopen(roomID) }
+        else { initial = try await client.start(roomID) }
         var gate = try ChorusJoinGate(room: initial.room)
         var leases = [initial.lease]
         let (signals, continuation) = AsyncThrowingStream<Signal, Error>.makeStream()

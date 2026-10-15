@@ -72,6 +72,7 @@ extension AppModel {
     var selectedID: String?
     var pendingSelection: String?
     var snapshot: ServerLibrarySnapshot?
+    var loadError: String?
     var responses: [String: ServerStatus] = [:]
     var failures: [String: String] = [:]
     var querying = Set<String>()
@@ -85,10 +86,12 @@ extension AppModel {
     var filtering: Bool { scope != .all || instanceID != nil }
 
     func load(paths: LauncherPaths, state: PersistentState) async {
-        let result = await Task.detached(priority: .utility) { ServerLibrary.load(paths: paths, state: state) }.value
-        guard !Task.isCancelled else { return }
-        snapshot = result
-        if let key = pendingSelection, result.items.contains(where: { $0.id == key }) { selectedID = key; pendingSelection = nil }
+        do {
+            let result = try await Task.detached(priority: .utility) { try ServerLibrary.load(paths: paths, state: state) }.value
+            try Task.checkCancellation()
+            snapshot = result; loadError = nil
+            if let key = pendingSelection, result.items.contains(where: { $0.id == key }) { selectedID = key; pendingSelection = nil }
+        } catch is CancellationError {} catch { snapshot = nil; loadError = error.localizedDescription }
     }
     func refresh(_ addresses: [ServerAddress]) async {
         let generation = UUID(); queryID = generation
@@ -217,6 +220,11 @@ struct ServersView: View {
         }
     }
     private var current: ServerLibraryItem? { filtered.first { $0.id == navigation.selectedID } ?? filtered.first }
+    private var firstChorusSelection: String? {
+        let room = chorus.rooms.first { $0.kind == "branch" } ??
+            chorus.rooms.first { ![.closed, .stopped].contains($0.state) } ?? chorus.recentlyClosed.first
+        return room.map { "chorus:" + $0.id }
+    }
     private var statusKey: String { items.map(\.id).joined(separator: "|") + navigation.refreshID.uuidString }
 
     var body: some View {
@@ -263,7 +271,7 @@ struct ServersView: View {
                         .disabled(model.readOnly || model.busy)
                 }
             }
-            .task(id: "\(model.state.revision?.uuidString ?? "")/\(navigation.refreshID)/\(model.historyRevision)") {
+            .task(id: "\(model.state.revision?.uuidString ?? "")/\(navigation.refreshID)/\(model.historyRevision)/\(chorus.serverLibraryRevision)") {
                 let paths = model.paths, state = model.state
                 let observer = FileChangeObserver(directories: state.instances.map { paths.game($0.id) }, fallbackSeconds: 15)
                 defer { observer.cancel() }
@@ -283,10 +291,13 @@ struct ServersView: View {
             }
             .onChange(of: filtered.map(\.id), initial: true) { _, ids in
                 if navigation.selectedID?.hasPrefix("chorus:") == true { return }
-                if navigation.selectedID.map(ids.contains) != true { navigation.selectedID = ids.first }
+                if navigation.selectedID.map(ids.contains) != true { navigation.selectedID = ids.first ?? firstChorusSelection }
             }
             .onChange(of: chorus.rooms.map(\.id), initial: true) { _, ids in
-                if navigation.selectedID == nil, let id = ids.first { navigation.selectedID = "chorus:" + id }
+                if let selected = navigation.selectedID, selected.hasPrefix("chorus:"),
+                   !ids.contains(String(selected.dropFirst("chorus:".count))) {
+                    navigation.selectedID = firstChorusSelection
+                } else if navigation.selectedID == nil { navigation.selectedID = firstChorusSelection }
             }
             .onChange(of: model.serverFocus, initial: true) { _, key in
                 guard let key else { return }
@@ -347,6 +358,9 @@ struct ServersView: View {
     }
 
     @ViewBuilder private var listErrors: some View {
+        if let error = navigation.loadError {
+            Text(error).font(.caption).foregroundStyle(.orange).padding()
+        }
         if let errors = navigation.snapshot?.errors, !errors.isEmpty {
             Label(Messages.Servers.listErrors.localized, systemImage: "exclamationmark.triangle.fill")
                 .font(.caption).foregroundStyle(.orange)

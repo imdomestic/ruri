@@ -35,6 +35,7 @@ public struct LaunchPlan: Codable, Sendable {
     public var host: GameHostPlan? = nil
     public var quickPlayLog: URL? = nil
     public var destination: LaunchDestination? = nil
+    public var chorusServerCleanup: ChorusServerCleanupPlan? = nil
     package var processExecutable: URL { wrapper?.first.map { URL(fileURLWithPath: $0) } ?? executable }
     package var processArguments: [String] { wrapper?.isEmpty == false ? Array(wrapper!.dropFirst()) + [executable.path] + arguments : arguments }
     public var environmentRedactions: [String] { (customEnvironmentNames ?? []).compactMap { environment[$0] }.filter { $0.count > 3 } }

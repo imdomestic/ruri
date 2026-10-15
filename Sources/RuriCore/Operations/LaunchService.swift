@@ -91,8 +91,17 @@ import Foundation
             try recorder.setJava(java.label + " · " + java.version)
             try advance(.arguments)
             try await installer.prepareRunDirectory(instance, manifest: manifest)
+            let chorus = try ChorusSettings.load(paths: self.paths)
+            var chorusCleanup: ChorusServerCleanupPlan?
+            if chorus.instances.values.contains(instanceID) {
+                let meta = try await chorus.client().meta()
+                let settings = try ChorusSettings.remember(zone: meta.zone, paths: self.paths)
+                chorusCleanup = try recorder.chorusServerCleanup(settings: settings, state: state)
+                try chorusCleanup?.clean(directory: paths.game(instanceID))
+            }
             let capabilities = await JavaCapabilities.load(for: java, cache: paths.cache)
-            let plan = try LaunchBuilder.build(instance: instance, manifest: manifest, java: java, account: account, accessToken: token, paths: paths, destination: target, externalAuth: externalAuth, offlineSkin: offlineSkin, capabilities: capabilities)
+            var plan = try LaunchBuilder.build(instance: instance, manifest: manifest, java: java, account: account, accessToken: token, paths: paths, destination: target, externalAuth: externalAuth, offlineSkin: offlineSkin, capabilities: capabilities)
+            plan.chorusServerCleanup = chorusCleanup
             recorder.addSecrets(plan.environmentRedactions + [token])
             try recorder.append(plan.redactedCommand)
             try recorder.setDestination(target)

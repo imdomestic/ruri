@@ -6,7 +6,22 @@ public struct ChorusSettings: Codable, Sendable {
     public static let defaultBaseURL = "http://encore.inner.imdomestic.com:8790"
     public var baseURL = defaultBaseURL
     public var instances: [String: UUID] = [:]
+    public var knownZones: [String] = [ChorusServerPolicy.legacyZone]
     public init() {}
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        baseURL = try values.decode(String.self, forKey: .baseURL)
+        instances = try values.decode([String: UUID].self, forKey: .instances)
+        knownZones = try values.decodeIfPresent([String].self, forKey: .knownZones) ?? [ChorusServerPolicy.legacyZone]
+    }
+    @discardableResult public static func remember(zone: String, paths: LauncherPaths) throws -> Self {
+        let normalized = try ServerAddress(zone).host
+        let settings = try load(paths: paths)
+        if settings.knownZones.contains(normalized) { return settings }
+        return try update(paths: paths) { settings in
+            settings.knownZones = Array(Set(settings.knownZones + [normalized, ChorusServerPolicy.legacyZone])).sorted()
+        }
+    }
     public static func load(paths: LauncherPaths) throws -> Self {
         let file = paths.root.appendingPathComponent("chorus.json")
         guard FileManager.default.fileExists(atPath: file.path) else { return Self() }

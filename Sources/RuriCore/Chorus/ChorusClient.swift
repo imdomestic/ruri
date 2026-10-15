@@ -59,10 +59,17 @@ public struct ChorusClient: Sendable {
     public func builds() async throws -> [ChorusBuild] { try await get([ChorusBuild].self, "/v1/builds") }
     public func branches() async throws -> [ChorusBranch] { try await get([ChorusBranch].self, "/v1/branches") }
     public func meta() async throws -> ChorusMeta { try await get(ChorusMeta.self, "/v1/meta") }
+    public func nodes() async throws -> [ChorusNode] { try await get([ChorusNode].self, "/v1/nodes") }
+    public func refreshGit() async throws { _ = try await data("/v1/git/refresh", method: "POST") }
     public func room(_ id: String) async throws -> ChorusRoom { try await get(ChorusRoom.self, "/v1/rooms/" + Self.component(id)) }
     public func build(_ id: String) async throws -> ChorusBuild { try await get(ChorusBuild.self, "/v1/builds/" + Self.component(id)) }
     public func start(_ id: String) async throws -> ChorusStartResult {
         try JSONDecoder().decode(ChorusStartResult.self, from: await data("/v1/rooms/" + Self.component(id) + "/start", method: "POST"))
+    }
+    public func reopen(_ id: String) async throws -> ChorusStartResult {
+        let current = try await room(id)
+        if current.state == .closed, current.label == "finished" { _ = try await label(id, finished: false) }
+        return try await start(id)
     }
     public func cancel(room: String, lease: String) async throws {
         _ = try await data("/v1/rooms/" + Self.component(room) + "/leases/" + Self.component(lease), method: "DELETE")

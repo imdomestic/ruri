@@ -70,7 +70,7 @@ struct ServerListTests {
         defer { try? FileManager.default.removeItem(at: paths.root) }
         let address = try ServerAddress("example.test")
         let state = try ServerLibrary.save(.init(address: address, favorite: true, alias: "Favorite"), paths: paths)
-        let library = ServerLibrary.load(paths: paths, state: state)
+        let library = try ServerLibrary.load(paths: paths, state: state)
         #expect(library.items.count == 1 && library.items[0].instanceIDs.isEmpty)
         #expect(library.items[0].name == "Favorite")
         #expect(try StateStore.load(paths).servers?.first?.address == address)
@@ -98,7 +98,7 @@ struct ServerListTests {
         let paths = base.configured(with: state), address = try ServerAddress("example.test")
         let manager = ServerListManager(paths: paths, instanceID: first.id)
         let snapshot = try manager.apply(.add(name: "Shared", address: address, resourcePacks: .ask), to: manager.snapshot())
-        let library = ServerLibrary.load(paths: paths, state: state)
+        let library = try ServerLibrary.load(paths: paths, state: state)
         #expect(library.items.count == 1 && Set(library.items[0].instanceIDs) == Set([first.id, second.id]))
         #expect(library.lists[first.id]?.directory == library.lists[second.id]?.directory)
         do {

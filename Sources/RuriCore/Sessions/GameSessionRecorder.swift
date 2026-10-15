@@ -65,4 +65,20 @@ import RuriLocalization
     public func setTuning(_ tuning: JVMTuning) throws { try writer.setTuning(tuning) }
     public func setWorld(_ world: GameWorldPlay) throws { try writer.setWorld(world) }
     public func setDestination(_ destination: LaunchDestination) throws { try writer.setDestination(destination) }
+    @discardableResult public func prepareChorusServers(settings: ChorusSettings, state: PersistentState) throws -> Int {
+        try chorusServerCleanup(settings: settings, state: state)?.clean(directory: paths.game(record.instanceID)) ?? 0
+    }
+    package func chorusServerCleanup(settings: ChorusSettings, state: PersistentState) throws -> ChorusServerCleanupPlan? {
+        try writer.requireWritable()
+        guard lease != nil, !hasHandedOff, record.processID == nil else {
+            throw RuriError.message(Messages.CoreGameSession.runCannotBeHandedToMonitor)
+        }
+        let configured = paths.configured(with: state)
+        guard configured.game(record.instanceID).standardizedFileURL.resolvingSymlinksInPath().path ==
+                paths.game(record.instanceID).standardizedFileURL.resolvingSymlinksInPath().path else {
+            throw RuriError.message(Messages.Servers.listChanged)
+        }
+        return try ServerListManager(paths: configured, instanceID: record.instanceID)
+            .chorusCleanupPlanDuringPreparation(policy: ChorusServerPolicy(settings: settings), state: state)
+    }
 }

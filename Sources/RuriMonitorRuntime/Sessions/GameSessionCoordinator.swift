@@ -55,6 +55,9 @@ import RuriLocalization
             if !result.stopRequested, let commands = plan.commands, commands.enabled, !commands.after.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 _ = await GameCommandRunner.run(commands.after, phase: .after, plan: plan, timeoutSeconds: commands.timeoutSeconds, exit: result, recorder: recorder) { self.shouldStop }
             }
+            if result.succeeded, let cleanup = plan.chorusServerCleanup {
+                try cleanup.clean(directory: plan.directory)
+            }
             try recorder.finish(exit: result)
             return result.shellStatus
         } catch {

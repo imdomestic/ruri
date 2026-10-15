@@ -26,9 +26,9 @@ struct ChorusSettingsView: View {
     }
     private func save() {
         do {
-            let normalized = try ChorusSettings.normalizedURL(url)
-            if !token.isEmpty { try ChorusTokenStore.save(token, baseURL: normalized); token = "" }
-            try ChorusSettings.update(paths: model.basePaths) { $0.baseURL = normalized.absoluteString }
+            let settings = try ChorusSettings.configure(paths: model.basePaths, baseURL: url, token: token.isEmpty ? nil : token)
+            url = settings.baseURL
+            token = ""
             chorus.configurationRevision = UUID()
             result = Messages.Chorus.saved.localized
         } catch { result = error.localizedDescription }

@@ -17,7 +17,13 @@ scripts/build-app.sh debug --build-system swiftbuild
 
 产物为 `build/Ruri Chorus.app`，其中 CLI 位于 `Contents/Helpers/ruri-cli`。安装 CLI 后使用 `ruri-chorus`。
 
+本地打包固定使用 `Resources/RuriSigning.cer` 对应的 Apple Development 身份，当前证书指纹为 `0B74E9A9640121629B281DAABCA88E6D4D46487E`，Team ID 为 `59ZC6MZ73T`。GUI 与 CLI 共用 `dev.ruri.launcher.chorus` 签名标识，打包时验证二者的 designated requirement 完全一致；身份不可用时立即终止打包。ruri-monitor 与 RuriGame 不读取钥匙串凭据。
+
+首次签名时为 codesign 选择“始终允许”；首次打开新签名版本时，为已有 Chorus 钥匙串条目完成授权。以后仅使用 `/Users/linwhite/ruri-chorus/build/Ruri Chorus.app`。更换证书时，通过 Xcode 安装包含私钥的 Apple Development 身份，将对应公钥证书导出为 DER 并更新 `Resources/RuriSigning.cer`，重新打包后核对 Team ID 和 GUI/CLI 的 designated requirement。旧条目再次请求授权时选择“始终允许”，随后重新构建并验证授权保持；只有授权仍不能生效时，才删除独立应用的 `dev.ruri.launcher.chorus.*` 条目并重新登录、配置 token。
+
 `chorus configure --url http://encore.inner.imdomestic.com:8790 --token-stdin` 从标准输入接收 token 并存入钥匙串。不要把 token 写进命令参数。`chorus rooms`、`chorus builds` 查询真实后端；`chorus start main-fabric` 请求启动；`chorus prepare main-fabric` 准备真实游戏、Java 和模组并等待房间就绪；`chorus launch main-fabric --dry-run` 检查已安装文件并生成启动计划。`--launch` 和实际 `launch` 需要在独立应用中登录账号。
+
+Chorus token 按规范化后端 URL 保存在进程内缓存；首次访问读取钥匙串，后续 API 调用和 SSE 重连直接复用。成功保存 token 时同步更新缓存，用户保存连接设置后会重新读取所选地址的条目。
 
 启动操作固定目标房间的 generation 和 buildId，服务端 ready 与本地文件准备全部满足后只启动一次。托管模组通过 SHA256 校验并原子交换目录；非托管模组保留并提示。取消加入操作会撤销该操作取得的租约。
 

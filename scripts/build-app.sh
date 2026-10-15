@@ -5,6 +5,11 @@ source scripts/lib/build.sh
 if [[ "${RURI_SIGNING_ACTIVE:-}" != 1 ]]; then
   exec python3 scripts/release/signing.py run -- /bin/zsh scripts/build-app.sh "$@"
 fi
+: "${RURI_SIGN_IDENTITY:?Apple Development signing identity is required}"
+if [[ "$RURI_SIGN_IDENTITY" == - ]]; then
+  print -u2 -- "Ruri Chorus requires its pinned Apple Development identity."
+  exit 1
+fi
 select_xcode
 configuration="${1:-release}"
 if (( $# )); then shift; fi
@@ -33,10 +38,7 @@ fi
 sign_keychain=()
 if [[ -n "${RURI_SIGN_KEYCHAIN:-}" ]]; then sign_keychain=(--keychain "$RURI_SIGN_KEYCHAIN"); fi
 codesign --force --sign "${RURI_SIGN_IDENTITY:--}" "${sign_keychain[@]}" "$app/Contents/Helpers/ruri-monitor"
-# The CLI acts as the same launcher principal. Its signing identifier preserves
-# the designated requirement of existing GUI-created Keychain entries; it is a
-# standalone helper, not another app bundle registered with Launch Services.
-# CHORUS: CLI 与 GUI 使用独立签名标识。
+# CHORUS: CLI 与 GUI 共享签名标识及钥匙串访问身份。
 codesign --force --identifier dev.ruri.launcher.chorus --sign "${RURI_SIGN_IDENTITY:--}" "${sign_keychain[@]}" "$app/Contents/Helpers/ruri-cli"
 for bundle in "$binary_dir/"*.bundle(N); do
   ditto "$bundle" "$app/Contents/Resources/${bundle:t}"

@@ -22,6 +22,17 @@ public struct ChorusSettings: Codable, Sendable {
         try encoder.encode(current).write(to: paths.root.appendingPathComponent("chorus.json"), options: .atomic)
         return current
     }
+    @discardableResult public static func configure(paths: LauncherPaths, baseURL: String, token: String? = nil) throws -> Self {
+        let url = try normalizedURL(baseURL)
+        return try update(paths: paths) { settings in
+            if let token {
+                try ChorusTokenStore.save(token, baseURL: url)
+            } else {
+                ChorusTokenStore.invalidate(baseURL: url)
+            }
+            settings.baseURL = url.absoluteString
+        }
+    }
     public static func normalizedURL(_ value: String) throws -> URL {
         guard var parts = URLComponents(string: value), ["http", "https"].contains(parts.scheme),
               parts.host?.isEmpty == false, parts.user == nil, parts.password == nil,
@@ -38,26 +49,60 @@ public struct ChorusSettings: Codable, Sendable {
     }
 }
 
+final class ChorusTokenCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [URL: Result<String, any Error>] = [:]
+
+    func load(baseURL: URL, read: () throws -> String) throws -> String {
+        try lock.withLock {
+            if let value = values[baseURL] { return try value.get() }
+            let value = Result(catching: read)
+            values[baseURL] = value
+            return try value.get()
+        }
+    }
+
+    func save(_ value: String, baseURL: URL, write: () throws -> Void) throws {
+        try lock.withLock {
+            try write()
+            values[baseURL] = .success(value)
+        }
+    }
+
+    func invalidate(baseURL: URL) {
+        lock.withLock { _ = values.removeValue(forKey: baseURL) }
+    }
+}
+
 public enum ChorusTokenStore {
     public static let service = "dev.ruri.launcher.chorus.api"
+    private static let cache = ChorusTokenCache()
     private static func query(_ url: URL) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: url.absoluteString]
     }
     public static func save(_ input: String, baseURL: URL) throws {
+        let url = try ChorusSettings.normalizedURL(baseURL.absoluteString)
         let token = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty, token.utf8.count <= 16384, token.unicodeScalars.allSatisfy({ (0x21...0x7e).contains($0.value) }) else {
             throw RuriError.message(Messages.Chorus.invalidToken)
         }
-        let value = [kSecValueData as String: Data(token.utf8)]
-        let status = SecItemUpdate(query(baseURL) as CFDictionary, value as CFDictionary)
-        if status == errSecItemNotFound {
-            var add = query(baseURL).merging(value) { _, new in new }
-            add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-            let created = SecItemAdd(add as CFDictionary, nil)
-            guard created == errSecSuccess else { throw failure(created) }
-        } else if status != errSecSuccess { throw failure(status) }
+        try cache.save(token, baseURL: url) {
+            let value = [kSecValueData as String: Data(token.utf8)]
+            let status = SecItemUpdate(query(url) as CFDictionary, value as CFDictionary)
+            if status == errSecItemNotFound {
+                var add = query(url).merging(value) { _, new in new }
+                add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+                let created = SecItemAdd(add as CFDictionary, nil)
+                guard created == errSecSuccess else { throw failure(created) }
+            } else if status != errSecSuccess { throw failure(status) }
+        }
     }
     public static func load(baseURL: URL) throws -> String {
+        let url = try ChorusSettings.normalizedURL(baseURL.absoluteString)
+        return try cache.load(baseURL: url) { try read(baseURL: url) }
+    }
+    static func invalidate(baseURL: URL) { cache.invalidate(baseURL: baseURL) }
+    private static func read(baseURL: URL) throws -> String {
         var request = query(baseURL)
         request[kSecReturnData as String] = true
         request[kSecMatchLimit as String] = kSecMatchLimitOne

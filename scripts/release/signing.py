@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-"""Use the pinned Apple Development identity for local and CI packages."""
-
 import argparse
 import base64
 from contextlib import contextmanager
@@ -93,8 +90,7 @@ def signing_material(environment):
         if not data or len(data) > 65536:
             raise SigningError("The signing certificate secret has an invalid size.")
         return data, password
-    # Local packages use the existing Xcode identity in the user's keychain.
-    # Never fall back to the old self-signed identity under .private/signing.
+    # 本机构建使用钥匙串中已有的 Apple Development 身份。
     return None
 
 
@@ -105,17 +101,12 @@ def signing_environment(environment):
         child.pop(name, None)
     child.pop("RURI_SIGN_KEYCHAIN", None)
     child["RURI_SIGNING_ACTIVE"] = "1"
-    required = environment.get("RURI_REQUIRE_SIGNING") == "1"
     override = environment.get("RURI_SIGN_IDENTITY")
     identity = fingerprint()
     if override and override != "-" and override.upper() != identity:
         raise SigningError("The requested signing identity does not match the pinned Apple certificate.")
     if override == "-":
-        if required:
-            raise SigningError("A required signed package must not use ad hoc signing.")
-        child["RURI_SIGN_IDENTITY"] = "-"
-        yield child
-        return
+        raise SigningError("Ruri Chorus requires its pinned Apple Development identity.")
     material = signing_material(environment)
     if material is None:
         if not (environment.get("CI") or environment.get("GITHUB_ACTIONS")) and identity in available_identities():
@@ -123,12 +114,7 @@ def signing_environment(environment):
             print(f"Signing with the local Apple Development identity: {identity}", flush=True)
             yield child
             return
-        if required or override:
-            raise SigningError("The pinned Apple Development identity is unavailable. Supply signing secrets in CI or install it with Xcode locally.")
-        child["RURI_SIGN_IDENTITY"] = "-"
-        print("No pinned Apple Development identity is available; this contributor build uses ad hoc signing.", flush=True)
-        yield child
-        return
+        raise SigningError("The pinned Apple Development identity is unavailable. Supply signing secrets in CI or install it with Xcode locally.")
     keychain_password = secrets.token_urlsafe(48)
     with tempfile.TemporaryDirectory(prefix="ruri-signing-", dir=environment.get("RUNNER_TEMP")) as temporary:
         work = Path(temporary)
@@ -168,15 +154,11 @@ def signing_environment(environment):
 
 
 def verify(app, environment):
-    identity = environment.get("RURI_SIGN_IDENTITY", "-")
-    if identity == "-" and environment.get("RURI_REQUIRE_SIGNING") != "1":
-        return
+    identity = environment.get("RURI_SIGN_IDENTITY", "")
     if identity.upper() != fingerprint():
         raise SigningError("A signed package must use the pinned Apple Development certificate.")
     team = certificate_team()
-    # A stable self-signed DR is insufficient: modern keychains additionally
-    # partition those callers by CDHash. This Apple-issued Mac development
-    # certificate is classified by its stable Team ID instead.
+    # 核验 Apple 证书及 Team ID，使重新构建继续使用同一钥匙串身份。
     requirement = (f'anchor apple generic and certificate leaf = H"{identity}" '
                    'and certificate 1[field.1.2.840.113635.100.6.2.1] exists '
                    'and certificate leaf[field.1.2.840.113635.100.6.1.12] exists '
@@ -191,6 +173,19 @@ def verify(app, environment):
                           label=f"Signing team verification for {target.name}", include_stderr=True).decode()
         if f"TeamIdentifier={team}" not in details.splitlines():
             raise SigningError(f"The signing Team ID for {target.name} does not match the pinned certificate.")
+    launcher_requirement = requirement + ' and identifier "dev.ruri.launcher.chorus"'
+    designated = []
+    for target in (app, app / "Contents/Helpers/ruri-cli"):
+        command(["codesign", "--verify", "--strict", "-R", "=" + launcher_requirement, str(target)],
+                label=f"Launcher identity verification for {target.name}")
+        output = command(["codesign", "-d", "-r-", str(target)],
+                         label=f"Designated requirement lookup for {target.name}", include_stderr=True).decode()
+        lines = [line for line in output.splitlines() if line.startswith("designated => ")]
+        if len(lines) != 1:
+            raise SigningError(f"The designated requirement for {target.name} is unavailable.")
+        designated.append(lines[0])
+    if designated[0] != designated[1]:
+        raise SigningError("Ruri Chorus and its CLI must have the same designated requirement.")
     print(f"Verified the Apple certificate and Team ID {team} on the app and every helper.")
 
 
@@ -222,7 +217,7 @@ def run_build(arguments, environment):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description="Sign and verify Ruri Chorus with its pinned Apple Development identity.")
     parser.add_argument("action", choices=["run", "verify", "cleanup-ci"])
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()

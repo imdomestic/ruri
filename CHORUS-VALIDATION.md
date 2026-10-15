@@ -6,11 +6,15 @@
 
 - 应用：`build/Ruri Chorus.app`；标识：`dev.ruri.launcher.chorus`；CLI：`Contents/Helpers/ruri-cli`。
 - 支持目录：`~/Library/Application Support/Ruri Chorus`。Microsoft 凭据、Chorus token、偏好设置、CLI 安装记录均使用独立标识。
-- Sparkle 已禁用。应用采用 ad hoc 签名，`codesign --verify --deep --strict` 通过。首次使用钥匙串时可能需要授权当前构建。
+- Sparkle 已禁用。应用使用 Apple Development 证书 `0B74E9A9640121629B281DAABCA88E6D4D46487E`、Team ID `59ZC6MZ73T`；`codesign --verify --deep --strict` 与全部辅助程序的证书检查通过。GUI/CLI 的 designated requirement 完全一致，签名标识为 `dev.ruri.launcher.chorus`。
 - 此分支开发和测试没有读取或写入已安装 Ruri 的数据目录。
 
 ## 已运行的检查
 
+- 第二轮缓存检查 8 项通过，覆盖首次读取、重复读取、并发访问、失败保留、保存更新和设置失效；使用纯缓存状态与真实文件，测试未访问钥匙串。日志：`.work/test-token-cache-round2.log`。首次 Apple Development 签名打包及随包 CLI 验证通过，日志：`.work/round2-a-build-first.log`。
+- 第二轮完整回归 184 项通过，包括主回归 144 项与附加检查 40 项；联网测试只通过 SSH 在内存中取得凭据，日志：`.work/round2-a-regression.log`。生产 Chorus token 由签名 CLI 配置；再次签名打包后，真实 `chorus rooms` 在 0.134 秒内返回成功，日志：`.work/round2-a-build-final.log`、`.work/round2-a-rooms-final.json`。
+- 源码调用链与二进制符号核验确认：只有 GUI 与 CLI 使用 SecItem 读取、保存凭据，全部 service 名均带 `dev.ruri.launcher.chorus` 前缀。monitor 的 RSA 密钥仅用于内存签名，RuriGame 不访问钥匙串。
+- 用户确认最终签名版本的 GUI 正常运行，刷新与点击 main-fabric 没有钥匙串授权弹窗。
 - Debug 构建、应用打包、签名检查、CLI 命令发现、JSON/NDJSON 输出、辅助进程、应用移动后的 CLI 链接检查通过。
 - 回归检查共 144 个测试通过：monitor/runtime 10 个、本地化 6 个、Core/Chorus 112 个、CLI 16 个。本轮真实 API、录制数据与实际游戏 manifest 检查全部执行，日志：`.work/test-final-regression.log`。SDL 正常退出能力检查使用独立应用实际安装的 Minecraft 26.3 manifest，并验证托管运行设置保留其他配置、已有游戏设置文件保持原样。
 - 检查采用纯函数、实际文件、SQLite、进程和真实 chorusd；上游使用替代依赖的测试不属于本次执行范围。
@@ -23,7 +27,7 @@
 - 真实 `prepare` 与 `launch --dry-run` 完成：`cfc16eaac-fabric`，generation 3，build `fabric-fc16eaac252b`。独立实例使用 Java 25、Fabric KnotClient、76 个 classpath 文件，QuickPlay 指向服务端返回的房间主机，结果明确包含 `authenticationRequired=true`。
 - 旧提交 `cb7f59da8fe55f6862265586db2817be66a63b8e` 的构建、房间 ready、实际模组替换、`prepare` 和 `launch --dry-run` 均完成。房间 `ccb7f59da-fabric` generation 1 使用 build `fabric-cb7f59da8fe5`，启动计划包含对应 QuickPlay 地址。记录：`.work/ruri-old-prepare.json`、`.work/ruri-old-dry-run.json`。
 - 实际生产构建 `fabric-cb7f59da8fe5` attempt 2 的失败状态通过独立应用 CLI 读取；返回 `failed`、完整 `build_failed` 错误及原始日志，记录：`.work/ruri-failed-build-log.json`。真实录制模型测试验证错误字段保持完整，界面在日志窗口显示该字段。
-- 应用打包日志：`.work/build-failure-app.log`。实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。
+- 实际启动计划记录位于 chorus-testbed 的 `.work/logs/ruri-dry-run.json`，不含凭据。
 
 ## 验收待办
 

@@ -120,8 +120,7 @@ extension CLIApplication {
         if request.spec.path.last == "configure" {
             let url = try ChorusSettings.normalizedURL(request.required("url"))
             guard request.flag("token-stdin") else { throw RuriError.message(Messages.Chorus.invalidToken) }
-            try ChorusTokenStore.save(readChorusToken(), baseURL: url)
-            try ChorusSettings.update(paths: paths) { $0.baseURL = url.absoluteString }
+            try ChorusSettings.configure(paths: paths, baseURL: url.absoluteString, token: readChorusToken())
             return .object(["saved": .bool(true), "message": .string(Messages.Chorus.saved.localized)])
         }
         let settings = try ChorusSettings.load(paths: paths)

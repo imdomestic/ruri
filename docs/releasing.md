@@ -1,6 +1,6 @@
 # Ruri Chorus 发布
 
-正式源码位于 `dev`。发布包为经过优化的 Universal 应用，包含 arm64 和 x86_64，最低系统版本为 macOS 14。
+正式源码位于 `dev`，版本标签使用 `chorus-v<版本号>`，例如 `chorus-v0.10.6`。发布包为经过优化的 Universal 应用，包含 arm64 和 x86_64，最低系统版本为 macOS 14。
 
 ## 本地构建
 

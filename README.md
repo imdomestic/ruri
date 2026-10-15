@@ -4,7 +4,7 @@
 
 ## 下载与安装
 
-[下载 Ruri Chorus 0.10.6（Universal DMG）](https://github.com/imdomestic/ruri-chorus/releases/download/v0.10.6/Ruri-Chorus-0.10.6-macOS-universal.dmg) · [发布记录](https://github.com/imdomestic/ruri-chorus/releases)
+[下载 Ruri Chorus 0.10.6（Universal DMG）](https://github.com/imdomestic/ruri-chorus/releases/download/chorus-v0.10.6/Ruri-Chorus-0.10.6-macOS-universal.dmg) · [发布记录](https://github.com/imdomestic/ruri-chorus/releases)
 
 支持 macOS 14 或更新版本，安装包同时包含 Apple Silicon 和 Intel 两种架构。
 

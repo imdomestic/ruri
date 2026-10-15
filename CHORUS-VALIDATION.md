@@ -31,7 +31,7 @@
 
 ## 真实进入验收
 
-- 用户确认使用最终签名版本，从服务器页成功进入 main-fabric，并在退出后从 Git 页选择旧提交 cb7f59da，成功进入对应临时房间。
+- 用户确认最终签名版本的 GUI 使用过程中没有重复钥匙串授权；指定进入 main-fabric 和旧提交 cb7f59da 的目的地验收待核验。
 - Minecraft 26.3 的 SDL 已纳入正常退出能力判定。实际 Java 游戏进程接受 `NSRunningApplication.terminate()` 后记录 `Stopping!`，会话结果为 `succeeded`、退出代码 0；该系统请求与 `NativeGameQuit.request` 相同。Chorus 托管实例使用已验证的 `macOS.enabled=false` 设置，首次创建游戏设置时关闭 VSync、辅助功能引导和失去焦点暂停。
 
 ## 联测设置

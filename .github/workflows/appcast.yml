@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   publish:
+    if: github.repository == 'guh0613/ruri'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

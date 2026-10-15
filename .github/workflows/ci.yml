@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   test:
+    if: github.repository == 'guh0613/ruri'
     name: Test (${{ matrix.arch }})
     strategy:
       fail-fast: false

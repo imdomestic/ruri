@@ -5,6 +5,7 @@
 # DEVELOPER_DIR selects Xcode; RURI_BUILD_DIR optionally selects the build folder
 # (release builds use its release-scratch subfolder). RURI_ARCH=x86_64 builds
 # for Intel with the same Xcode; tests then run under Rosetta.
+# RURI_ARCH=universal 生成 arm64 与 x86_64 的通用产物。
 set -euo pipefail
 cd "${0:A:h:h}"
 source scripts/lib/build.sh
@@ -43,10 +44,16 @@ build_args=()
 scratch_path="${RURI_BUILD_DIR:-.build}"
 if [[ -n "${RURI_ARCH:-}" ]]; then
   case "$RURI_ARCH" in
-    arm64|x86_64) ;;
-    *) print -u2 -- "Unsupported RURI_ARCH: $RURI_ARCH. Use arm64 or x86_64."; exit 2 ;;
+    arm64|x86_64) build_args+=(--arch "$RURI_ARCH") ;;
+    universal)
+      if [[ "$swift_command" == test ]]; then
+        print -u2 -- "Universal tests require an explicit RURI_ARCH=arm64 or RURI_ARCH=x86_64."
+        exit 2
+      fi
+      build_args+=(--arch arm64 --arch x86_64)
+      ;;
+    *) print -u2 -- "Unsupported RURI_ARCH: $RURI_ARCH. Use arm64, x86_64 or universal."; exit 2 ;;
   esac
-  build_args+=(--arch "$RURI_ARCH")
   scratch_path="$scratch_path/$RURI_ARCH"
 fi
 # A debug build in the same folder invalidates release intermediates, making the

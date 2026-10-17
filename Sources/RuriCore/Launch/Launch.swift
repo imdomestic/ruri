@@ -128,9 +128,16 @@ public enum LaunchBuilder {
                        "RURI_INSTANCE_NAME": instance.name, "RURI_INSTANCE_ID": instance.id.uuidString, "RURI_GAME_VERSION": instance.gameVersion, "RURI_JAVA": java.path]) { _, value in value }
         }
         let wrapper = try commands.resolveWrapper(environment: env, directory: paths.game(instance.id))
-        let nativeQuitSupported = !legacyLWJGL && manifest.libraries.contains { $0.name.hasPrefix("org.lwjgl:lwjgl-glfw:") }
+        let nativeQuitSupported = supportsNativeQuit(manifest)
         var offlineSkin = offlineSkin
         offlineSkin?.argumentIndex = jvm.count
         return LaunchPlan(executable: URL(fileURLWithPath: java.path), arguments: jvm + [mainClass] + game, directory: paths.game(instance.id), environment: env, nativeQuitSupported: nativeQuitSupported, memory: plan.memory, tuning: plan.tuning, customEnvironmentNames: customEnvironment.entries.map(\.name), commands: commands.enabled && !commands.isEmpty ? commands : nil, wrapper: wrapper.isEmpty ? nil : wrapper, offlineSkin: offlineSkin, debugLogging: instance.launchPresentation?.debugLogging == true, host: GameHostPlan(instanceID: instance.id, name: instance.name, iconPNG: instance.iconPNG ?? instance.iconStyle.flatMap(InstanceIconRenderer.launchPNG), javaVersion: java.version, architecture: java.architecture, settings: instance.macOSGameSettings ?? .init(), fullscreen: instance.fullscreen == true), quickPlayLog: quickPlayLog, destination: target)
+    }
+
+    static func supportsNativeQuit(_ manifest: VersionManifest) -> Bool {
+        !manifest.libraries.contains { $0.name.hasPrefix("org.lwjgl.lwjgl:lwjgl:") }
+            && manifest.libraries.contains {
+                $0.name.hasPrefix("org.lwjgl:lwjgl-glfw:") || $0.name.hasPrefix("org.lwjgl:lwjgl-sdl:")
+            }
     }
 }

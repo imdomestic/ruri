@@ -7,8 +7,8 @@ struct VexTests {
         let paths = LauncherPaths(root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
         let settings = try VexSettings.load(paths: paths)
         #expect(!settings.enabled)
-        #expect(settings.baseURL.isEmpty)
-        #expect(throws: (any Error).self) { try settings.client() }
+        #expect(settings.servers.isEmpty)
+        #expect(throws: (any Error).self) { try settings.server() }
         #expect(!FileManager.default.fileExists(atPath: paths.root.path))
     }
     @Test func settingsRoundTripInUpstreamStoreWithoutChangingAccounts() throws {
@@ -17,13 +17,14 @@ struct VexTests {
         var original = PersistentState()
         original.settings.appearance = "dark"
         try StateStore.save(original, to: paths)
-        try VexSettings.update(paths: paths) { $0.enabled = true; $0.baseURL = "https://vex.example.com"; $0.project = "example" }
+        let server = try VexServer(baseURL: URL(string: "https://vex.example.com")!, name: "example")
+        try VexSettings.update(paths: paths) { $0.enabled = true; try $0.save(server) }
         let state = try StateStore.load(paths)
         #expect(state.settings.experimental?.vex?.enabled == true)
         #expect(state.settings.appearance == "dark")
         #expect(state.accounts == original.accounts)
         try VexSettings.update(paths: paths) { $0.enabled = false }
-        #expect(try VexSettings.load(paths: paths).baseURL == "https://vex.example.com")
+        #expect(try VexSettings.load(paths: paths).servers.first?.baseURL == "https://vex.example.com")
     }
     @Test func requestScopesProjectAndRejectsForeignOrigins() throws {
         let client = try VexClient(baseURL: URL(string: "https://vex.example.com")!, token: "unit-input", project: "example")
@@ -91,6 +92,54 @@ struct VexTests {
         try cache.save("updated", baseURL: url, write: {})
         #expect(try cache.load(baseURL: url, read: read) == "updated")
         #expect(reads == 1)
+    }
+    @Test func invitationAddressesNormalizeOriginsAndRejectForeignLinks() throws {
+        let parsed = try VexServerInput(" HTTPS://VEX.EXAMPLE:443/i/abco-il23 ")
+        #expect(parsed.baseURL.absoluteString == "https://vex.example")
+        #expect(parsed.invite == "ABC01123")
+        #expect(try VexServerInput("vex.example:8791/").baseURL.absoluteString == "http://vex.example:8791")
+        #expect(try VexServerInput.invite("abcd-1234", for: parsed.baseURL) == "ABCD1234")
+        for input in ["https://other.example/i/ABCD-1234", "https://vex.example/i/ABCD-1234?token=bad", "https://user@vex.example/i/ABCD-1234"] {
+            #expect(throws: (any Error).self) { try VexServerInput.invite(input, for: parsed.baseURL) }
+        }
+        for input in ["abcd", "ABCD_U234", "ABCD-U234"] {
+            #expect(throws: (any Error).self) { try VexServerInput.code(input) }
+        }
+        #expect(throws: (any Error).self) { try VexServerInput("https://vex.example/api") }
+    }
+    @Test func serverDefaultsAndProjectSelectionRemainIndependent() throws {
+        var settings = VexSettings(); settings.enabled = true
+        var first = try VexServer(baseURL: URL(string: "https://one.example")!, name: "one")
+        let second = try VexServer(baseURL: URL(string: "https://two.example")!, name: "two")
+        try settings.save(first); try settings.save(second)
+        #expect(try settings.server().id == first.id)
+        #expect(try settings.server(named: "two").id == second.id)
+        settings.defaultServer = nil
+        #expect(throws: (any Error).self) { try settings.server() }
+        let one = VexProject(id: "one", defaultBranch: "main", remote: nil, role: "tester", loaders: ["fabric"])
+        let two = VexProject(id: "two", defaultBranch: "main", remote: nil, role: "viewer", loaders: ["fabric"])
+        #expect(try first.resolveProject(nil, available: [one]).id == "one")
+        #expect(throws: (any Error).self) { try first.resolveProject(nil, available: [one, two]) }
+        first.defaultProject = "two"
+        #expect(try first.resolveProject(nil, available: [one, two]).id == "two")
+        #expect(try first.resolveProject("one", available: [one, two]).id == "one")
+        var renamed = second; renamed.name = "one"
+        #expect(throws: (any Error).self) { try settings.save(renamed) }
+    }
+    @Test func oldSingleServerSettingsDoNotCreateNewConnections() throws {
+        let input = Data(#"{"enabled":true,"baseURL":"https://old.example","project":"old"}"#.utf8)
+        let settings = try JSONDecoder().decode(VexSettings.self, from: input)
+        #expect(settings.enabled)
+        #expect(settings.servers.isEmpty)
+        #expect(settings.defaultServer == nil)
+    }
+    @Test func tokenCacheInvalidationIsIsolatedByServer() throws {
+        let cache = VexTokenCache(), first = URL(string: "https://one.example")!, second = URL(string: "https://two.example")!
+        try cache.save("one", baseURL: first, write: {})
+        try cache.save("two", baseURL: second, write: {})
+        cache.invalidate(baseURL: first)
+        #expect(try cache.load(baseURL: first) { "new" } == "new")
+        #expect(try cache.load(baseURL: second) { "changed" } == "two")
     }
     private func room(project: String = "example", id: String = "c12345678-fabric", generation: Int = 1, state: VexRoomState, closedAt: String? = nil) -> VexRoom {
         VexRoom(project: project, id: id, kind: "commit", branch: nil, sha: "12345678", loader: "fabric", buildId: "fabric-12345678",

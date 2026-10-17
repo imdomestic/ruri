@@ -97,7 +97,8 @@ struct VexFileSafetyTests {
             try StateStore.save(state, to: paths)
             try paths.prepareInstance(instance.id)
             try VexSettings.update(paths: paths) { $0.instances["file-test"] = instance.id }
-            try JSONEncoder().encode(VexInstanceManager.Marker(key: "file-test")).write(to: paths.instance(instance.id).appendingPathComponent("vex-instance.json"))
+            try JSONEncoder().encode(VexInstanceManager.Marker(key: "file-test", server: "https://vex.example.com", project: "example", room: "main-fabric"))
+                .write(to: paths.instance(instance.id).appendingPathComponent("vex-instance.json"))
             mods = paths.configured(with: try StateStore.load(paths)).game(instance.id).appendingPathComponent("mods")
             try FileManager.default.createDirectory(at: mods, withIntermediateDirectories: true)
             let client = try VexClient(baseURL: URL(string: "https://vex.example.com")!, token: "unused", project: "example")

@@ -2,6 +2,7 @@ import Foundation
 import RuriLocalization
 
 public struct VexPreparedInstance: Sendable {
+    public let server: String
     public let instance: GameInstance
     public let java: JavaRuntime
     public let unmanagedMods: [String]
@@ -35,7 +36,8 @@ public struct VexInstanceManager: Sendable {
         guard instance.runDirectory == .isolated else { throw RuriError.message(Messages.Vex.invalidResponse) }
         let configured = paths.configured(with: try StateStore.load(paths))
         let marker = try JSONDecoder().decode(Marker.self, from: Data(contentsOf: configured.instance(id).appendingPathComponent("vex-instance.json")))
-        guard marker.key == (try instanceKey(build)) else { throw RuriError.message(Messages.Vex.invalidResponse) }
+        guard marker.key == (try instanceKey(build)), marker.server == client.baseURL.absoluteString,
+              marker.project == build.project else { throw RuriError.message(Messages.Vex.invalidResponse) }
         let manifest = try await GameInstaller(paths: configured).loadManifest(instance)
         let java = try await GameJavaRequirement(instance: instance, manifest: manifest).require(from: JavaDiscovery.scan(paths: configured, extra: [instance.javaPath].compactMap { $0 }))
         let mods = configured.game(id).appendingPathComponent("mods")
@@ -44,10 +46,10 @@ public struct VexInstanceManager: Sendable {
         for file in files { try VexModSync.verify(LauncherPaths.safePath(file.name, within: mods), file: file) }
         let managed = Set(files.map(\.name))
         let unmanaged = try FileManager.default.contentsOfDirectory(atPath: mods.path).filter { $0.hasSuffix(".jar") && !managed.contains($0) }.sorted()
-        return .init(instance: instance, java: java, unmanagedMods: unmanaged)
+        return .init(server: client.baseURL.absoluteString, instance: instance, java: java, unmanagedMods: unmanaged)
     }
-    public struct Marker: Codable, Sendable { public let key: String }
-    public func prepare(_ build: VexBuild, progress: @escaping @Sendable (InstallProgress) async -> Void = { _ in }) async throws -> VexPreparedInstance {
+    public struct Marker: Codable, Sendable { public let key: String; public let server: String; public let project: String; public let room: String }
+    public func prepare(_ build: VexBuild, roomID: String, progress: @escaping @Sendable (InstallProgress) async -> Void = { _ in }) async throws -> VexPreparedInstance {
         _ = try VexModSync.clientFiles(build)
         guard let minecraft = build.minecraft, let version = build.loaderVersion, let major = build.java,
               let loader = LoaderKind(rawValue: build.loader), loader != .vanilla else { throw RuriError.message(Messages.Vex.invalidResponse) }
@@ -80,7 +82,8 @@ public struct VexInstanceManager: Sendable {
         }
         let configured = paths.configured(with: try StateStore.load(paths))
         try FileManager.default.createDirectory(at: configured.instance(instanceID), withIntermediateDirectories: true)
-        try JSONEncoder().encode(Marker(key: key)).write(to: configured.instance(instanceID).appendingPathComponent("vex-instance.json"), options: .atomic)
+        try JSONEncoder().encode(Marker(key: key, server: client.baseURL.absoluteString, project: build.project, room: roomID))
+            .write(to: configured.instance(instanceID).appendingPathComponent("vex-instance.json"), options: .atomic)
         let manifest = try await GameInstaller(paths: configured, downloader: downloader).loadManifest(instance)
         let requirement = try GameJavaRequirement(instance: instance, manifest: manifest)
         guard manifest.requiredJava <= major else { throw RuriError.message(Messages.CoreLaunch.javaVersionIncompatible) }
@@ -97,11 +100,12 @@ public struct VexInstanceManager: Sendable {
             try requirement.validate(java)
         }
         let result = try await synchronizer.synchronize(build, instance: instance)
-        return VexPreparedInstance(instance: instance, java: java, unmanagedMods: result.unmanaged)
+        return VexPreparedInstance(server: client.baseURL.absoluteString, instance: instance, java: java, unmanagedMods: result.unmanaged)
     }
 }
 
 public struct VexLaunchPlan: Codable, Sendable {
+    public let server: String
     public let project: String
     public let instanceID: UUID
     public let roomID: String
@@ -124,7 +128,7 @@ public struct VexLaunchPlan: Codable, Sendable {
               GameQuickPlay.supports(instance: instance, manifest: manifest) else { throw RuriError.message(Messages.CoreLaunch.mainClassMissing) }
         let destination = try ServerAddress(room.host + ":" + String(room.port))
         let arguments = GameQuickPlay.applying(.server(destination), arguments: [], logging: paths.instance(instance.id).appendingPathComponent("quick-play/vex.json"), gameDirectory: paths.game(instance.id))
-        return Self(project: room.project, instanceID: instance.id, roomID: room.id, generation: room.generation, buildID: room.buildId,
+        return Self(server: prepared.server, project: room.project, instanceID: instance.id, roomID: room.id, generation: room.generation, buildID: room.buildId,
                     javaPath: prepared.java.path, javaMajor: prepared.java.major, mainClass: mainClass,
                     gameDirectory: paths.game(instance.id).path, destinationArguments: arguments,
                     authenticationRequired: state.accounts.isEmpty, unmanagedMods: prepared.unmanagedMods)

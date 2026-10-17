@@ -59,4 +59,29 @@ import RuriCore
         #expect(try output.value["error"]["code"].string == "IO_ERROR")
         #expect(try Data(contentsOf: paths.state) == invalid)
     }
+    @Test func serverCommandsPersistDefaultsAndExposeLoginDiscovery() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let paths = LauncherPaths(root: root)
+        let first = try VexServer(baseURL: URL(string: "https://one.example")!, name: "one")
+        let second = try VexServer(baseURL: URL(string: "https://two.example")!, name: "two")
+        try VexSettings.update(paths: paths) { settings in
+            settings.enabled = true; try settings.save(first); try settings.save(second)
+        }
+        let options = ["--data-dir", root.path, "--json"]
+        let output = CommandCapture()
+        #expect(await CLIApplication.run(["vex", "servers", "list"] + options, write: output.write) == 0)
+        let text = String(decoding: output.output, as: UTF8.self)
+        #expect(text.contains(first.baseURL)); #expect(text.contains(second.baseURL))
+        let changed = CommandCapture()
+        #expect(await CLIApplication.run(["vex", "servers", "default", "two", "--project", "example"] + options, write: changed.write) == 0)
+        let settings = try VexSettings.load(paths: paths)
+        #expect(try settings.server().id == second.id)
+        #expect(settings.servers.last?.defaultProject == "example")
+        let schema = CommandCapture()
+        #expect(await CLIApplication.run(["schema", "vex", "--full"] + options, write: schema.write) == 0)
+        let discovery = String(decoding: schema.output, as: UTF8.self)
+        #expect(discovery.contains("token-stdin")); #expect(discovery.contains("invite")); #expect(discovery.contains("whoami"))
+        #expect(!discovery.contains("configure"))
+    }
 }

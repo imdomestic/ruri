@@ -107,8 +107,20 @@ public struct VexCommit: Codable, Identifiable, Equatable, Sendable {
     public let refs: [String]
     public let builds: [String: VexBuildSummary?]
 }
-public struct VexUser: Codable, Sendable { public let id: String; public let admin: Bool }
-public struct VexMeta: Codable, Sendable { public let zone: String; public let publicBaseURL: String? }
+public struct VexUser: Codable, Equatable, Sendable { public let id: String; public let admin: Bool }
+public struct VexMeta: Codable, Sendable {
+    public let name: String
+    public let version: String
+    public let auth: Authentication
+    public let zone: String?
+    public let publicBaseURL: String?
+    public struct Authentication: Codable, Sendable { public let methods: [String] }
+}
+public struct VexLoginResult: Decodable, Sendable {
+    public let token: String
+    public let user: VexUser
+    public let expiresAt: String
+}
 public struct VexNode: Codable, Identifiable, Sendable {
     public var id: String { name }
     public let name: String

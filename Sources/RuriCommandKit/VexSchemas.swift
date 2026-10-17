@@ -12,18 +12,26 @@ enum VexSchemas {
             "project": text, "id": text, "sha": text, "loader": text, "status": text, "attempt": integer,
             "files": CommandSchemas.array(CommandSchemas.object(["name": text, "sha256": text, "sha1": text, "sha512": text, "size": integer, "side": text, "url": text]))
         ], required: ["project", "id", "status", "attempt", "files"])
+        let server = CommandSchemas.object(["baseURL": text, "name": text, "defaultProject": text, "userID": text, "sessionRevision": text], required: ["baseURL", "name"])
+        func scoped(_ fields: [String: Value]) -> Value {
+            CommandSchemas.object(fields.merging(["server": text, "project": text]) { current, _ in current }, required: ["server", "project"])
+        }
         switch action {
-        case "projects": return CommandSchemas.array(CommandSchemas.object(["id": text, "remote": text, "defaultBranch": text, "role": text, "loaders": CommandSchemas.array(text)]))
-        case "rooms": return CommandSchemas.array(room)
-        case "builds": return CommandSchemas.array(build)
-        case "build": return build
-        case "create": return room
-        case "start": return CommandSchemas.object(["room": room, "lease": CommandSchemas.object(["id": text, "generation": integer, "expiresAt": text])])
-        case "branches", "commits": return CommandSchemas.array(CommandSchemas.object([:]))
-        case "build-log": return CommandSchemas.object(["log": text])
-        case "configure": return CommandSchemas.object(["saved": boolean])
-        case "refresh": return CommandSchemas.object(["refreshed": boolean])
-        default: return CommandSchemas.object(["project": text, "instanceID": text, "roomID": text, "generation": integer, "buildID": text, "sessionID": text, "room": room, "authenticationRequired": boolean, "destinationArguments": CommandSchemas.array(text)])
+        case "add", "login": return server
+        case "list": return CommandSchemas.array(server)
+        case "default": return CommandSchemas.object(["defaultServer": text])
+        case "logout", "remove": return CommandSchemas.object(["server": text, "loggedOut": boolean, "remoteRevoked": boolean, "warnings": CommandSchemas.array(text)])
+        case "whoami": return CommandSchemas.object(["server": text, "user": CommandSchemas.object(["id": text, "admin": boolean])])
+        case "projects": return CommandSchemas.object(["server": text, "projects": CommandSchemas.array(CommandSchemas.object(["id": text, "remote": text, "defaultBranch": text, "role": text, "loaders": CommandSchemas.array(text)]))])
+        case "rooms": return scoped(["rooms": CommandSchemas.array(room)])
+        case "builds": return scoped(["builds": CommandSchemas.array(build)])
+        case "build": return scoped(["build": build])
+        case "create": return scoped(["room": room])
+        case "start": return scoped(["room": room, "lease": CommandSchemas.object(["id": text, "generation": integer, "expiresAt": text])])
+        case "branches", "commits": return scoped([action: CommandSchemas.array(CommandSchemas.object([:]))])
+        case "build-log": return scoped(["build": build, "log": text])
+        case "refresh": return scoped(["refreshed": boolean])
+        default: return scoped(["instanceID": text, "roomID": text, "generation": integer, "buildID": text, "sessionID": text, "room": room, "authenticationRequired": boolean, "destinationArguments": CommandSchemas.array(text)])
         }
     }
 }

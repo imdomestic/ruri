@@ -30,8 +30,7 @@ public struct VexEventStream: Sendable {
                 while !Task.isCancelled {
                     do {
                         let path = try room.map { try client.projectPath("/rooms/" + VexClient.component($0) + "/events") } ?? "/v2/events"
-                        guard VexClient.validProject(client.project) else { throw RuriError.message(Messages.Vex.projectRequired) }
-                        var request = try client.request(path, query: room == nil ? [.init(name: "project", value: client.project)] : [])
+                        var request = try client.request(path, query: room == nil && !client.project.isEmpty ? [.init(name: "project", value: client.project)] : [])
                         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
                         let (bytes, response) = try await client.session.bytes(for: request)
                         try client.validate(response)

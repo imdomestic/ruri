@@ -10,11 +10,13 @@ public struct VexHTTPError: Error, LocalizedError, Sendable {
 public struct VexClient: Sendable {
     public let baseURL: URL
     public let project: String
-    private let token: String
+    private let token: String?
     let session: URLSession
-    public init(baseURL: URL, token: String, project: String = "") throws {
+    public init(baseURL: URL, token: String? = nil, project: String = "") throws {
         self.baseURL = try VexSettings.normalizedURL(baseURL.absoluteString)
-        guard !token.isEmpty, !token.contains("\r"), !token.contains("\n") else { throw RuriError.message(Messages.Vex.invalidToken) }
+        if let token {
+            guard !token.isEmpty, !token.contains("\r"), !token.contains("\n") else { throw RuriError.message(Messages.Vex.invalidToken) }
+        }
         guard project.isEmpty || Self.validProject(project) else { throw RuriError.message(Messages.Vex.projectRequired) }
         self.project = project
         self.token = token
@@ -41,7 +43,7 @@ public struct VexClient: Sendable {
         var request = URLRequest(url: parts.url!)
         request.httpMethod = method
         request.httpBody = body
-        request.setValue(["Bearer", token].joined(separator: " "), forHTTPHeaderField: "Authorization")
+        if let token { request.setValue(["Bearer", token].joined(separator: " "), forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
         return request
@@ -66,6 +68,11 @@ public struct VexClient: Sendable {
         try JSONDecoder().decode(type, from: await data(path, query: query))
     }
     public func projects() async throws -> [VexProject] { try await get([VexProject].self, "/v2/projects") }
+    public func selecting(project: String) throws -> Self { try Self(baseURL: baseURL, token: token, project: project) }
+    public func redeem(code: String, client: String) async throws -> VexLoginResult {
+        try JSONDecoder().decode(VexLoginResult.self, from: await data("/v2/auth/invites/redeem", method: "POST", body: JSONEncoder().encode(["code": code, "client": client])))
+    }
+    public func logout() async throws { _ = try await data("/v2/auth/logout", method: "POST") }
     public func me() async throws -> VexUser { try await get(VexUser.self, "/v2/me") }
     public func meta() async throws -> VexMeta { try await get(VexMeta.self, "/v2/meta") }
     public func nodes() async throws -> [VexNode] { try await get([VexNode].self, "/v2/nodes") }

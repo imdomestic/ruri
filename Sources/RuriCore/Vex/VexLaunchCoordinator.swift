@@ -11,7 +11,7 @@ public struct VexLaunchCoordinator: Sendable {
     private enum Signal: Sendable {
         case event(VexEvent), prepared(VexPreparedInstance), local(String), renewed(VexStartResult)
     }
-    public func prepare(roomID: String, progress: @escaping @Sendable (VexJoinProgress) async -> Void = { _ in }) async throws -> VexPreparedJoin {
+    public func prepare(roomID: String, events: AsyncThrowingStream<VexEvent, Error>? = nil, progress: @escaping @Sendable (VexJoinProgress) async -> Void = { _ in }) async throws -> VexPreparedJoin {
         let initial = try await client.reopen(roomID)
         guard initial.room.project == client.project else { throw RuriError.message(Messages.Vex.invalidResponse) }
         var gate = try VexJoinGate(room: initial.room)
@@ -19,7 +19,7 @@ public struct VexLaunchCoordinator: Sendable {
         let (signals, continuation) = AsyncThrowingStream<Signal, Error>.makeStream()
         let stream = Task {
             do {
-                for try await event in VexEventStream(client: client).events(room: roomID) { continuation.yield(.event(event)) }
+                for try await event in events ?? VexEventStream(client: client).events(room: roomID) { continuation.yield(.event(event)) }
             } catch { continuation.finish(throwing: error) }
         }
         let local = Task {
@@ -30,7 +30,7 @@ public struct VexLaunchCoordinator: Sendable {
                     try await Task.sleep(for: .seconds(2))
                     build = try await client.build(initial.room.buildId)
                 }
-                let prepared = try await VexInstanceManager(paths: paths, client: client).prepare(build) { install in
+                let prepared = try await VexInstanceManager(paths: paths, client: client).prepare(build, roomID: roomID) { install in
                     continuation.yield(.local(install.message.localized))
                 }
                 continuation.yield(.prepared(prepared))

@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import Darwin
 import RuriCore
 import RuriLocalization
 
@@ -55,19 +56,35 @@ private struct VexRootCommand: ParsableCommand {
 struct VexGroup: ParsableCommand {
     static var configuration: CommandConfiguration {
         .init(commandName: "vex", abstract: Messages.Vex.title.localized,
-              subcommands: [VexCommand<Configure>.self, VexCommand<Projects>.self, VexCommand<Rooms>.self,
+              subcommands: [VexServersGroup.self, VexCommand<Login>.self, VexCommand<Logout>.self, VexCommand<Whoami>.self,
+                            VexCommand<Projects>.self, VexCommand<Rooms>.self,
                             VexCommand<Builds>.self, VexCommand<Branches>.self, VexCommand<Commits>.self,
                             VexCommand<Refresh>.self, VexCommand<BuildLog>.self, VexCommand<Build>.self,
                             VexCommand<Create>.self, VexCommand<Start>.self, VexCommand<Prepare>.self, VexCommand<Launch>.self])
     }
     static var specs: [CommandSpec] {
-        configuration.subcommands.compactMap { ($0 as? any ExecutableCommand.Type)?.spec }
+        configuration.subcommands.compactMap { ($0 as? any ExecutableCommand.Type)?.spec } + VexServersGroup.specs
     }
 }
 
-protocol VexAction { static var name: String { get }; static var operand: String? { get }; static var mutation: Bool { get } }
-extension VexAction { static var operand: String? { nil }; static var mutation: Bool { false } }
-enum Configure: VexAction { static let name = "configure"; static let mutation = true }
+struct VexServersGroup: ParsableCommand {
+    static var configuration: CommandConfiguration {
+        .init(commandName: "servers", abstract: Messages.VexLogin.servers.localized,
+              subcommands: [VexCommand<ServerAdd>.self, VexCommand<ServerList>.self, VexCommand<ServerRemove>.self, VexCommand<ServerDefault>.self])
+    }
+    static var specs: [CommandSpec] { configuration.subcommands.compactMap { ($0 as? any ExecutableCommand.Type)?.spec } }
+}
+protocol VexAction { static var name: String { get }; static var prefix: [String] { get }; static var operand: String? { get }; static var mutation: Bool { get } }
+extension VexAction { static var prefix: [String] { ["vex"] }; static var operand: String? { nil }; static var mutation: Bool { false } }
+protocol VexServerAction: VexAction {}
+extension VexServerAction { static var prefix: [String] { ["vex", "servers"] } }
+enum ServerAdd: VexServerAction { static let name = "add"; static let operand: String? = "address"; static let mutation = true }
+enum ServerList: VexServerAction { static let name = "list" }
+enum ServerRemove: VexServerAction { static let name = "remove"; static let operand: String? = "name"; static let mutation = true }
+enum ServerDefault: VexServerAction { static let name = "default"; static let operand: String? = "name"; static let mutation = true }
+enum Login: VexAction { static let name = "login"; static let mutation = true }
+enum Logout: VexAction { static let name = "logout"; static let mutation = true }
+enum Whoami: VexAction { static let name = "whoami" }
 enum Projects: VexAction { static let name = "projects" }
 enum Rooms: VexAction { static let name = "rooms" }
 enum Builds: VexAction { static let name = "builds" }
@@ -83,12 +100,14 @@ enum Launch: VexAction { static let name = "launch"; static let operand: String?
 
 struct VexCommand<Action: VexAction>: ExecutableCommand {
     static var spec: CommandSpec {
-        .init(path: ["vex", Action.name], summary: Messages.Vex.title.localized,
+        .init(path: Action.prefix + [Action.name], summary: Messages.Vex.title.localized,
               operands: Action.operand.map { [.init(name: $0, type: "string", required: true, help: $0)] } ?? [],
               options: [
                 .init(name: "project", type: "string", required: false, help: Messages.Vex.project.localized),
-                .init(name: "url", type: "string", required: false, help: Messages.Vex.backendURL.localized),
-                .init(name: "token-stdin", type: "bool", required: false, help: Messages.Vex.token.localized),
+                .init(name: "server", type: "string", required: false, help: Messages.VexLogin.servers.localized),
+                .init(name: "name", type: "string", required: false, help: Messages.Servers.name.localized),
+                .init(name: "invite", type: "string", required: false, help: Messages.VexLogin.invite.localized),
+                .init(name: "token-stdin", type: "bool", required: false, help: Messages.VexLogin.serviceToken.localized),
                 .init(name: "branch", type: "string", required: false, help: "branch"),
                 .init(name: "before", type: "string", required: false, help: "sha"),
                 .init(name: "loader", type: "string", required: false, help: "loader"),
@@ -100,7 +119,9 @@ struct VexCommand<Action: VexAction>: ExecutableCommand {
     @OptionGroup var common: CommonOptions
     @Argument var operands: [String] = []
     @Option var project: String?
-    @Option var url: String?
+    @Option var server: String?
+    @Option(name: .customLong("name")) var serverName: String?
+    @Option var invite: String?
     @Option var branch: String?
     @Option var before: String?
     @Option var loader: String?
@@ -109,7 +130,7 @@ struct VexCommand<Action: VexAction>: ExecutableCommand {
     @Flag var launch = false
     @Flag(name: .customLong("dry-run")) var dryRun = false
     var parameters: [String: Value] {
-        ["project": .text(project), "url": .text(url), "branch": .text(branch), "before": .text(before),
+        ["project": .text(project), "server": .text(server), "name": .text(serverName), "invite": .text(invite), "branch": .text(branch), "before": .text(before),
          "loader": .text(loader), "token-stdin": .bool(tokenStdin), "force": .bool(force), "launch": .bool(launch), "dry-run": .bool(dryRun)].filter { $0.value != .null }
     }
 }
@@ -119,48 +140,94 @@ extension CLIApplication {
         let paths = basePaths(request)
         let settings = try VexSettings.load(paths: paths)
         guard settings.enabled else { throw RuriError.message(Messages.Vex.disabled) }
-        if request.spec.path.last == "configure" {
-            let url = try VexSettings.normalizedURL(request.required("url"))
-            guard !request.dryRun, request.flag("token-stdin") else { throw RuriError.message(Messages.Vex.invalidToken) }
-            try VexTokenStore.save(readVexToken(), baseURL: url)
-            try VexSettings.update(paths: paths) { value in
-                value.baseURL = url.absoluteString
-                if let project = request.string("project") { value.project = project }
+        if request.spec.path.starts(with: ["vex", "servers"]) {
+            if request.spec.path.last == "list" { return try .encode(settings.servers) }
+            guard !request.dryRun else { return .object(["dryRun": .bool(true)]) }
+            if request.spec.path.last == "add" {
+                let input = try request.operand()
+                output.addSecrets([input])
+                var server = try await VexAuthentication.add(input, name: request.string("name"), paths: paths)
+                if let project = request.string("project") {
+                    server.defaultProject = project
+                    try VexSettings.update(paths: paths) { try $0.save(server) }
+                }
+                return try .encode(server)
             }
-            return .object(["saved": .bool(true)])
+            let server = try settings.server(named: request.operand())
+            if request.spec.path.last == "remove" {
+                let remote = try await VexAuthentication.logout(server, paths: paths, remove: true)
+                return logoutResult(server, remote: remote)
+            }
+            try VexSettings.update(paths: paths) { settings in
+                settings.defaultServer = server.id
+                if let project = request.string("project"), let index = settings.servers.firstIndex(where: { $0.id == server.id }) {
+                    settings.servers[index].defaultProject = project
+                }
+            }
+            return .object(["defaultServer": .string(server.name)])
         }
-        let project = request.string("project") ?? settings.project
-        let client = try request.flag("token-stdin")
-            ? VexClient(baseURL: VexSettings.normalizedURL(settings.baseURL), token: readVexToken(), project: project)
-            : settings.client(project: project)
-        if request.spec.path.last == "projects" { return try .encode(await client.projects()) }
-        guard VexClient.validProject(project) else { throw RuriError.message(Messages.Vex.projectRequired) }
-        let selected = try await client.projects().first { $0.id == project }
-        guard let selected else { throw RuriError.message(Messages.Vex.projectRequired) }
+        let server = try settings.server(named: request.string("server"))
+        if request.spec.path.last == "login" {
+            guard !request.dryRun else { return .object(["dryRun": .bool(true)]) }
+            let loggedIn: VexServer
+            if request.flag("token-stdin") {
+                let token = try readVexToken()
+                output.addSecrets([token])
+                loggedIn = try await VexAuthentication.serviceLogin(server, token: token)
+            } else {
+                let input: String
+                if let invite = request.string("invite") { input = invite }
+                else {
+                    let meta = try await VexClient(baseURL: VexSettings.normalizedURL(server.baseURL)).meta()
+                    guard meta.auth.methods.contains("invite"), isatty(STDIN_FILENO) == 1 else {
+                        throw RuriError.message(Messages.VexLogin.inviteHelp)
+                    }
+                    output.help(Messages.VexLogin.invite.localized)
+                    output.help(Messages.VexLogin.inviteHelp.localized)
+                    guard let value = readLine() else { throw RuriError.message(Messages.VexLogin.inviteInvalid) }
+                    input = value
+                }
+                output.addSecrets([input])
+                loggedIn = try await VexAuthentication.login(server, invite: input)
+            }
+            try VexSettings.update(paths: paths) { try $0.save(loggedIn) }
+            return try .encode(loggedIn)
+        }
+        if request.spec.path.last == "logout" {
+            guard !request.dryRun else { return .object(["dryRun": .bool(true)]) }
+            return logoutResult(server, remote: try await VexAuthentication.logout(server, paths: paths))
+        }
+        let base = try server.client()
+        if request.spec.path.last == "whoami" { return .object(["server": .string(server.id), "user": try .encode(await base.me())]) }
+        let available = try await base.projects()
+        if request.spec.path.last == "projects" { return .object(["server": .string(server.id), "projects": try .encode(available)]) }
+        let selected = try server.resolveProject(request.string("project"), available: available)
+        let client = try base.selecting(project: selected.id)
         let branch = request.string("branch") ?? selected.defaultBranch
         let loader = request.string("loader") ?? selected.loaders?.first
         switch request.spec.path.last {
-        case "rooms": return try .encode(await client.rooms())
-        case "builds": return try .encode(await client.builds())
-        case "branches": return try .encode(await client.branches())
+        case "rooms": return .object(["server": .string(server.id), "project": .string(selected.id), "rooms": try .encode(await client.rooms())])
+        case "builds": return .object(["server": .string(server.id), "project": .string(selected.id), "builds": try .encode(await client.builds())])
+        case "branches": return .object(["server": .string(server.id), "project": .string(selected.id), "branches": try .encode(await client.branches())])
         case "build-log":
             let build = try await client.build(request.operand())
-            return .object(["build": try .encode(build), "log": .string(try await client.log(build: build.id))])
+            return .object(["server": .string(server.id), "project": .string(selected.id), "build": try .encode(build), "log": .string(try await client.log(build: build.id))])
         case "commits":
             guard let branch else { throw RuriError.message(Messages.Vex.invalidResponse) }
-            return try .encode(await client.commits(branch: branch, before: request.string("before")))
+            return .object(["server": .string(server.id), "project": .string(selected.id), "commits": try .encode(await client.commits(branch: branch, before: request.string("before")))])
         case "refresh":
             guard !request.dryRun else { return .object(["dryRun": .bool(true)]) }
-            try await client.refreshGit(); return .object(["refreshed": .bool(true)])
+            try await client.refreshGit(); return .object(["server": .string(server.id), "project": .string(selected.id), "refreshed": .bool(true)])
         case "build":
             guard let loader, !request.dryRun else { throw RuriError.message(Messages.Vex.invalidResponse) }
-            return try .encode(await client.createBuild(sha: request.operand(), loader: loader, force: request.flag("force")))
+            return .object(["server": .string(server.id), "project": .string(selected.id), "build": try .encode(await client.createBuild(sha: request.operand(), loader: loader, force: request.flag("force")))])
         case "create":
             guard let loader, let branch, !request.dryRun else { throw RuriError.message(Messages.Vex.invalidResponse) }
-            return try .encode(await client.createRoom(sha: request.operand(), loader: loader, branch: branch))
+            return .object(["server": .string(server.id), "project": .string(selected.id), "room": try .encode(await client.createRoom(sha: request.operand(), loader: loader, branch: branch))])
         case "start" where !request.flag("launch"):
             guard !request.dryRun else { return .object(["dryRun": .bool(true)]) }
-            return try .encode(await client.start(request.operand()))
+            let result = try await client.start(request.operand())
+            return .object(["server": .string(server.id), "project": .string(selected.id), "room": try .encode(result.room), "lease": try .encode(result.lease)])
         case "launch" where request.dryRun:
             let room = try await client.room(request.operand()), build = try await client.build(room.buildId)
             let prepared = try await VexInstanceManager(paths: paths, client: client).installed(build)
@@ -171,8 +238,12 @@ extension CLIApplication {
             if request.spec.path.last == "prepare" { return try .encode(await VexLaunchPlan.inspect(joined.prepared, room: joined.room, paths: paths)) }
             let address = try ServerAddress(joined.room.host + ":" + String(joined.room.port))
             let session = try await LaunchService(paths: paths).start(instanceID: joined.prepared.instance.id, destination: .server(address))
-            return .object(["sessionID": .string(session.id.uuidString), "room": try .encode(joined.room)])
+            return .object(["server": .string(server.id), "project": .string(selected.id), "sessionID": .string(session.id.uuidString), "room": try .encode(joined.room)])
         }
+    }
+    private static func logoutResult(_ server: VexServer, remote: VexLogoutOutcome) -> Value {
+        .object(["server": .string(server.id), "loggedOut": .bool(true), "remoteRevoked": .bool(remote.remoteRevoked),
+                 "warnings": .array(remote.warning.map { [.string($0)] } ?? [])])
     }
     private static func readVexToken() throws -> String {
         var data = Data()

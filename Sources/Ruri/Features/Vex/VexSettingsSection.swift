@@ -31,7 +31,12 @@ struct VexSettingsSection: View {
                         }
                         Spacer()
                         let connection = vex.connections.first { $0.id == server.id }
-                        Text(connection?.statusText ?? Messages.VexLogin.notLoggedIn.localized).font(.caption)
+                        VStack(alignment: .trailing) {
+                            Text(connection?.statusText ?? Messages.VexLogin.notLoggedIn.localized).font(.caption)
+                            if let notice = connection?.eventConnectionNotice {
+                                Text(notice).font(.caption).foregroundStyle(.orange)
+                            }
+                        }
                         if connection?.status != .loggedIn {
                             Button(connection?.status == .expired ? Messages.VexLogin.loginAgain.localized : Messages.VexLogin.login.localized) { sheet = .login(server) }
                         }

@@ -33,7 +33,9 @@ struct VexConnectionIdentity: Equatable {
     var projects: [VexProjectPresentation] = []
     var nodes: [VexNode] = []
     var error: String?
+    var eventConnection: VexEventConnectionStatus.State = .idle
     @ObservationIgnored private var task: Task<Void, Never>?
+    @ObservationIgnored private var eventConnectionID = UUID()
     @ObservationIgnored private var subscribers: [UUID: AsyncThrowingStream<VexEvent, Error>.Continuation] = [:]
     init(_ server: VexServer) { id = server.id; self.server = server }
     var statusText: String {
@@ -46,6 +48,7 @@ struct VexConnectionIdentity: Equatable {
     }
     func stop() {
         task?.cancel(); task = nil
+        eventConnectionID = UUID(); eventConnection = .idle
         for subscriber in subscribers.values { subscriber.finish(throwing: CancellationError()) }
         subscribers = [:]
     }
@@ -59,6 +62,7 @@ struct VexConnectionIdentity: Equatable {
     func start(paths: LauncherPaths) {
         stop()
         guard server.userID != nil else { status = .loggedOut; projects = []; user = nil; return }
+        let connectionID = eventConnectionID
         task = Task {
             var retry = 0
             while !Task.isCancelled {
@@ -80,7 +84,9 @@ struct VexConnectionIdentity: Equatable {
                     status = .loggedIn; error = nil; retry = 0
                     try await withThrowingTaskGroup(of: Void.self) { group in
                         group.addTask { [weak self] in
-                            for try await event in VexEventStream(client: client).events() {
+                            for try await event in VexEventStream(client: client).events(connectionChanged: { [weak self] state in
+                                await self?.updateEventConnection(state, id: connectionID)
+                            }) {
                                 try Task.checkCancellation()
                                 try await self?.receive(event)
                             }
@@ -109,6 +115,11 @@ struct VexConnectionIdentity: Equatable {
             }
         }
     }
+    private func updateEventConnection(_ state: VexEventConnectionStatus.State, id: UUID) {
+        guard eventConnectionID == id else { return }
+        eventConnection = state
+    }
+    var eventConnectionNotice: String? { status == .loggedIn ? eventConnection.message?.localized : nil }
     func record(_ failure: any Error) {
         error = VexAuthentication.message(for: failure)
         if let http = failure as? VexHTTPError, http.status == 401 { status = .expired }

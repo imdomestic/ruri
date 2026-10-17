@@ -3,6 +3,32 @@ import Testing
 @testable import RuriCore
 
 struct VexTests {
+    @Test func eventConnectionWaitsForSyncAndRecoversIndependently() {
+        var first = VexEventConnectionStatus(), second = VexEventConnectionStatus()
+        #expect(first.state == .idle)
+        first.beginAttempt(); second.beginAttempt()
+        #expect(first.state == .connecting)
+        first.receivedSync(); second.receivedSync()
+        #expect(first.state == .connected)
+        second.disconnected()
+        #expect(second.state == .disconnected)
+        #expect(second.state.message?.localized == "实时更新已断开，将自动重新连接")
+        #expect(first.state == .connected)
+        second.beginAttempt()
+        #expect(second.state == .reconnecting)
+        second.receivedSync()
+        #expect(second.state == .connected)
+        #expect(second.state.message?.localized == nil)
+        #expect(first.state == .connected)
+    }
+    @Test func eventConnectionRetriesBeforeItsFirstSync() {
+        var connection = VexEventConnectionStatus()
+        connection.beginAttempt(); connection.disconnected(); connection.beginAttempt()
+        #expect(connection.state == .reconnecting)
+        #expect(connection.state.message?.localized == "正在重新连接实时更新")
+        connection.receivedSync()
+        #expect(connection.state == .connected)
+    }
     @Test func recordedServerSyncParsesProjectRoomAndClientFiles() async throws {
         let file = try #require(Bundle.module.url(forResource: "stageb-sync", withExtension: "sse", subdirectory: "VexFixtures"))
         let events = try await VexEventStream.decodeRecording(Data(contentsOf: file))

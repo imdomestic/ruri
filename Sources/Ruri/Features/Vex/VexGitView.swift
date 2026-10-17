@@ -16,6 +16,9 @@ struct VexGitView: View {
                             Button(Messages.VexLogin.loginAgain.localized) { login = connection.server }
                         }
                     }
+                    if let notice = connection.eventConnectionNotice {
+                        Text(notice).font(.caption).foregroundStyle(.orange)
+                    }
                     if let error = connection.error { Text(error).foregroundStyle(.red) }
                     ForEach(connection.projects) { project in
                         if !vex.hidesGroupTitles { Text(project.id).font(.headline) }

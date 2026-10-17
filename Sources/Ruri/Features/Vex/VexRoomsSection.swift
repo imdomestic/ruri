@@ -23,6 +23,9 @@ struct VexRoomsSection: View {
                         Button(Messages.VexLogin.loginAgain.localized) { login = connection.server }
                     }
                 }
+                if let notice = connection.eventConnectionNotice {
+                    Text(notice).font(.caption).foregroundStyle(.orange)
+                }
                 ForEach(connection.nodes.filter(\.hasLowDiskSpace)) { node in
                     if let bytes = node.rootFreeBytes {
                         Label(Messages.VexRooms.lowDiskSpace(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .binary)).localized,

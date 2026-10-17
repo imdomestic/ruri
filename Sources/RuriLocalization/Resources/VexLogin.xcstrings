@@ -140,6 +140,57 @@
         }
       }
     },
+    "VexLogin.eventsConnecting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to live updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接实时更新"
+          }
+        }
+      }
+    },
+    "VexLogin.eventsDisconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live updates disconnected; reconnecting automatically"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时更新已断开，将自动重新连接"
+          }
+        }
+      }
+    },
+    "VexLogin.eventsReconnecting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnecting to live updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重新连接实时更新"
+          }
+        }
+      }
+    },
     "VexLogin.expired" : {
       "extractionState" : "manual",
       "localizations" : {

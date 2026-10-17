@@ -51,6 +51,24 @@ extension Messages {
         public static var duplicateName: LocalizedMessage {
             .init(key: "VexLogin.duplicateName", table: "VexLogin", fallback: "请输入尚未使用的服务器名称，名称不能为空。")
         }
+        /// 正在连接实时更新
+        ///
+        /// Resource: `VexLogin.VexLogin.eventsConnecting`.
+        public static var eventsConnecting: LocalizedMessage {
+            .init(key: "VexLogin.eventsConnecting", table: "VexLogin", fallback: "正在连接实时更新")
+        }
+        /// 实时更新已断开，将自动重新连接
+        ///
+        /// Resource: `VexLogin.VexLogin.eventsDisconnected`.
+        public static var eventsDisconnected: LocalizedMessage {
+            .init(key: "VexLogin.eventsDisconnected", table: "VexLogin", fallback: "实时更新已断开，将自动重新连接")
+        }
+        /// 正在重新连接实时更新
+        ///
+        /// Resource: `VexLogin.VexLogin.eventsReconnecting`.
+        public static var eventsReconnecting: LocalizedMessage {
+            .init(key: "VexLogin.eventsReconnecting", table: "VexLogin", fallback: "正在重新连接实时更新")
+        }
         /// 登录已失效
         ///
         /// Resource: `VexLogin.VexLogin.expired`.
@@ -162,6 +180,9 @@ extension Messages {
             "VexLogin:VexLogin.clientName": .init("ruri on %@", [.text]),
             "VexLogin:VexLogin.defaultProject": .init("默认项目", []),
             "VexLogin:VexLogin.duplicateName": .init("请输入尚未使用的服务器名称，名称不能为空。", []),
+            "VexLogin:VexLogin.eventsConnecting": .init("正在连接实时更新", []),
+            "VexLogin:VexLogin.eventsDisconnected": .init("实时更新已断开，将自动重新连接", []),
+            "VexLogin:VexLogin.eventsReconnecting": .init("正在重新连接实时更新", []),
             "VexLogin:VexLogin.expired": .init("登录已失效", []),
             "VexLogin:VexLogin.invite": .init("使用邀请链接或邀请码", []),
             "VexLogin:VexLogin.inviteHelp": .init("向服务器管理员索取；也可以在已登录的设备上执行 vex auth invite 生成。", []),

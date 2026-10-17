@@ -1,6 +1,15 @@
 {
-  "originHash" : "9ece48fded7ef7cf290baab402bd253bced224c1ebd853612ab13106fd792f68",
+  "originHash" : "f0f533164a3004db38ec2326c046b7123d2f5417cec9bfb430ba5629fec77ad1",
   "pins" : [
+    {
+      "identity" : "eventsource",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mattt/EventSource.git",
+      "state" : {
+        "revision" : "bd64824505da71a1a403adb221f6e25413c0bc7f",
+        "version" : "1.4.0"
+      }
+    },
     {
       "identity" : "sparkle",
       "kind" : "remoteSourceControl",

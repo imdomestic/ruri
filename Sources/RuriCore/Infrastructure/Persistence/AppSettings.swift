@@ -21,5 +21,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var defaultEnvironment: String?
     public var defaultLaunchCommands: LaunchCommands?
     public var defaultMacOSGameSettings: MacOSGameSettings?
+    // MARK: Vex (experimental)
+    public var experimental: ExperimentalSettings?
     public init() {}
 }

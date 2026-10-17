@@ -12,7 +12,7 @@ struct VexIntegrationTests {
         #expect(meta.zone == nil)
         #expect(meta.publicBaseURL == nil)
     }
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_SECOND_URL"] != nil))
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_URL"] != nil && ProcessInfo.processInfo.environment["VEX_IT_SECOND_URL"] != nil))
     func realServersKeepIndependentOriginsAndStreams() async throws {
         let environment = ProcessInfo.processInfo.environment
         var identifiers: Set<String> = []

@@ -3,7 +3,7 @@ import Testing
 @testable import RuriCore
 
 struct VexStreamIntegrationTests {
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_SSH_HOST"] != nil))
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_URL"] != nil && ProcessInfo.processInfo.environment["VEX_IT_SSH_HOST"] != nil))
     func realEventDisconnectAndRecoveryRemainIsolated() async throws {
         let environment = ProcessInfo.processInfo.environment
         let primaryURL = try VexSettings.normalizedURL(#require(environment["VEX_IT_URL"]))

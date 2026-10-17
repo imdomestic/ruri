@@ -16,6 +16,8 @@ struct RootView: View {
     /// Pinned servers on the home page keep their own status rounds.
     @State private var homeServers = ServerNavigationState()
     @State private var accountsNavigation = AccountsNavigationState()
+    // MARK: Vex (experimental)
+    @State private var vex = VexPresentation()
     private var hasCollectionColumn: Bool { model.page == .library || model.page == .accounts || model.page == .servers }
     private let collectionMinimumWidth: CGFloat = 280
     private let collectionToolbarWidth: CGFloat = 420
@@ -69,6 +71,7 @@ struct RootView: View {
                 } detail: {
                     Group {
                         switch model.page {
+                        case .vexGit: VexGitView()
                         case .home, .library, .accounts, .servers: HomeView(servers: homeServers)
                         case .discover: DiscoverView()
                         case .history: GameHistoryView(cache: historyCache, instanceID: model.historyInstanceID)
@@ -84,6 +87,17 @@ struct RootView: View {
             }
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 600)
+        // MARK: Vex (experimental)
+        .environment(vex)
+        .task(id: VexConnectionIdentity(settings: model.state.settings.experimental?.vex)) {
+            vex.configure(settings: model.state.settings.experimental?.vex ?? VexSettings(), paths: model.paths)
+        }
+        .onChange(of: model.state.settings.experimental?.vex?.enabled) {
+            if model.state.settings.experimental?.vex?.enabled != true {
+                vex.stop()
+                if model.page == .vexGit { model.page = .home }
+            }
+        }
         .sheet(isPresented: Bindable(model).showCLISetup) { CLIOnboardingView() }
         .sheet(isPresented: Bindable(model).showCreate) { CreateInstanceView() }
         .sheet(isPresented: Binding(get: { model.showDirectories || model.showAddDirectory }, set: {
@@ -174,6 +188,10 @@ private struct RootSidebar: View {
         NavigationStack {
             List(selection: $model.page) {
                 Section { ForEach([Page.home, .library, .servers, .discover]) { page in sidebarRow(page) } }
+                // MARK: Vex (experimental)
+                if model.state.settings.experimental?.vex?.enabled == true {
+                    Section(Messages.Vex.title.localized) { sidebarRow(.vexGit) }
+                }
                 Section(Messages.AppRootView.records.localized) { ForEach([Page.history, .activity]) { page in sidebarRow(page) } }
                 Section(Messages.AppRootView.manage.localized) { ForEach([Page.accounts, .java, .settings]) { page in sidebarRow(page) } }
             }

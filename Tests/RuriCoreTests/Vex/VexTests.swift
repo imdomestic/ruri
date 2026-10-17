@@ -3,6 +3,20 @@ import Testing
 @testable import RuriCore
 
 struct VexTests {
+    @Test func recordedServerSyncParsesProjectRoomAndClientFiles() async throws {
+        let file = try #require(Bundle.module.url(forResource: "stageb-sync", withExtension: "sse", subdirectory: "VexFixtures"))
+        let events = try await VexEventStream.decodeRecording(Data(contentsOf: file))
+        #expect(events.count == 1)
+        guard case .sync(let sync) = try #require(events.first) else { Issue.record("Expected recorded sync"); return }
+        let room = try #require(sync.rooms.first), build = try #require(sync.builds.first)
+        #expect(room.project == "vex-it-stageb")
+        #expect(room.state == .stopped)
+        #expect(room.generation == 0)
+        #expect(room.buildId == build.id)
+        #expect(build.status == .ready)
+        #expect(build.files.filter(\.isClient).map(\.name) == ["vex-example-fabric-1.1.1.jar", "fabric-api-0.161.0+26.3.jar"])
+        #expect(build.files.filter { !$0.isClient }.count == 1)
+    }
     @Test func disabledSettingsDoNotCreateFilesOrReadCredentials() throws {
         let paths = LauncherPaths(root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
         let settings = try VexSettings.load(paths: paths)

@@ -18,6 +18,8 @@ struct PreferencesView: View {
             newInstances
             network
             CLISettingsSection()
+            // MARK: Vex (experimental)
+            VexSettingsSection()
             if updater.isAvailable { softwareUpdate }
             dataAndAbout
         }

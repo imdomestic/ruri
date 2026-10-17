@@ -202,7 +202,12 @@ struct ServersView: View {
     @Environment(\.appearsActive) private var appearsActive
     let column: NavigationSplitViewColumn
     @Bindable var navigation: ServerNavigationState
-    private var items: [ServerLibraryItem] { navigation.snapshot?.items ?? [] }
+    // MARK: Vex (experimental)
+    private var items: [ServerLibraryItem] {
+        let items = navigation.snapshot?.items ?? []
+        guard let settings = model.state.settings.experimental?.vex, settings.enabled else { return items }
+        return items.filter { !VexServerPolicy(settings: settings).hides($0) }
+    }
     private var filtered: [ServerLibraryItem] {
         let history = navigation.snapshot?.history ?? [:]
         return items.filter { item in
@@ -300,6 +305,8 @@ struct ServersView: View {
     /// to set them apart from. Double-clicking a row joins the server.
     private var list: some View {
         List(selection: $navigation.selectedID) {
+            // MARK: Vex (experimental)
+            if model.state.settings.experimental?.vex?.enabled == true { VexRoomsSection() }
             let pinned = navigation.scope == .all ? filtered.filter { $0.preference?.favorite == true } : []
             if pinned.isEmpty || pinned.count == filtered.count {
                 rows(filtered)

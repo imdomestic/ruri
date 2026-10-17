@@ -101,6 +101,8 @@ enum CommandSchemas {
                       required: ["schemaVersion", "ok", "data", "warnings", "error"])
     }
     static func payload(_ spec: CommandSpec) -> Value {
+        // MARK: Vex (experimental)
+        if spec.path.first == "vex" { return VexSchemas.payload(spec.path.last!) }
         let p = spec.path, action = p.last!, path = p.joined(separator: " ")
         if p.first == "config" {
             return action == "get" ? configReport : object(["changed": boolean, "dryRun": boolean, "before": configReport, "after": configReport])

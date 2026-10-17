@@ -1,0 +1,29 @@
+USAGE: ruri <subcommand> [options]
+
+  schema  查询命令的输入和输出结构。
+  app  应用信息与语言设置
+  cli  命令行工具的安装与卸载
+  config  全局设置、默认配置与实例独立配置
+  instance  实例管理与游戏安装
+  directory  游戏目录的添加、移动与恢复
+  java  Java 查找、安装与管理
+  account  账号管理与登录
+  launch  启动检查与游戏启动
+  server  服务器
+  session  游戏运行记录、日志与诊断
+  catalog  内容搜索与版本查询
+  content  模组、资源包与光影包管理
+  world  存档管理、导入导出与备份
+  datapack  数据包管理与排序
+  schematic  投影文件管理
+  pack  整合包安装、更新与回退
+  download  文件下载与校验
+  cache  下载缓存的空间清理
+  recovery  未完成操作的查询与恢复
+  doctor  检查状态、路径、Java、账号凭据及内置辅助程序。
+
+查看命令：ruri help <资源> 显示该组命令的用法；ruri help --all 显示完整速查表。
+使用 list 返回的完整 ID 指定目标；修改时需明确指定目标，可用 selected 查询当前选择。支持 --dry-run 的命令可先预览；删除等操作需要 --yes，覆盖还需要 --replace。
+默认输出简洁文本；--json 返回格式稳定的结构化结果；--output ndjson 返回事件流。--data-dir <路径> 指定数据目录；--language en|zh-Hans；--quiet 隐藏进度。
+列表默认最多 50 项，--limit <1…1000> / --offset <数量> 分页，--all 返回全部。
+查询命令结构：ruri schema <资源> <动作> --input 或 --output-schema；配置命令可加 --scope app|defaults|instance。

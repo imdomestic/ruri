@@ -38,6 +38,6 @@ let package = Package(
         .testTarget(name: "RuriSessionKitTests", dependencies: ["RuriSessionKit"]),
         .testTarget(name: "RuriCoreTests", dependencies: ["RuriCore", "RuriMonitorRuntime", "RuriLocalization"]),
         .testTarget(name: "RuriLocalizationTests", dependencies: ["RuriLocalization"]),
-        .testTarget(name: "RuriCLITests", dependencies: ["RuriCommandKit", "RuriCore"])
+        .testTarget(name: "RuriCLITests", dependencies: ["RuriCommandKit", "RuriCore"], resources: [.copy("VexFixtures")])
     ]
 )

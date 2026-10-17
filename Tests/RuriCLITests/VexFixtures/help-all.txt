@@ -1,0 +1,143 @@
+USAGE: ruri <subcommand> [options]
+
+ruri schema [<resource>] [<action>] [<subaction>]  — 查询命令的输入和输出结构。
+ruri app info  — 显示应用及命令行工具的版本和路径。
+ruri app language get  — 读取应用的界面语言。
+ruri app language set <language>  — 设置界面语言，重新启动 Ruri 后生效。
+ruri cli status  — 检查命令行工具及 PATH。
+ruri cli install  — 安装 ruri 到 /usr/local/bin；可使用 --bin-dir 自定义目录。需要管理员权限时，请从 Ruri 设置完成系统授权。
+ruri cli uninstall --yes  — 卸载命令链接，仅移除属于 Ruri 的链接。
+ruri config get [<key>] --scope <scope>  — 查询已设置的配置、实际生效的配置及继承来源。
+ruri config set <key> <value> --scope <scope>  — 使用 JSON 值设置一个配置字段。
+ruri config apply --scope <scope> --file <file>  — 将 JSON 配置补丁作为一次完整操作应用。
+ruri config reset <key> --scope <scope>  — 将配置字段或组重置为内置默认值。
+ruri config inherit <key> --scope <scope>  — 让指定实例配置组重新使用默认配置。
+ruri instance list  — 列出由 Ruri 管理和从其他位置添加的实例。
+ruri instance selected  — 查询当前选中的实例。
+ruri instance show [<id>]  — 查询实例详情及文件位置。
+ruri instance versions  — 列出可用的 Minecraft 版本。
+ruri instance create --name <name> --game <game> --directory <directory>  — 创建并安装指定名称的实例。
+ruri instance install <id>  — 完成实例的安装。
+ruri instance repair <id>  — 修复实例的安装文件。
+ruri instance select <id>  — 选择实例。
+ruri instance rename <id> <name>  — 重命名实例。
+ruri instance favorite <id> <enabled>  — 设置实例是否固定到主页。
+ruri instance remove <id> --yes  — 将实例自有文件移到废纸篓，并移除实例记录。
+ruri instance icon <id>  — 设置或重置实例图标。
+ruri instance copy <id> --directory <directory> --name <name>  — 将实例复制到指定目录并命名。
+ruri instance move <id> --directory <directory>  — 将实例移动到另一目录。
+ruri instance export <id> <file>  — 导出实例归档。
+ruri instance component list <id>  — 查询已安装的加载器及组件备份。
+ruri instance component versions <id> <loader>  — 列出与游戏兼容的加载器版本。
+ruri instance component set <id>  — 替换已安装的加载器组合。
+ruri instance component restore <id> --yes  — 恢复上一次加载器配置。
+ruri directory list  — 列出已添加的游戏目录，包括暂时无法访问的目录。
+ruri directory selected  — 查询当前选中的游戏目录。
+ruri directory scan <path>  — 检查已有的 Minecraft 文件夹，不添加到 Ruri。
+ruri directory add <path> --name <name>  — 添加已有的游戏目录。
+ruri directory select <id>  — 选择已添加的游戏目录。
+ruri directory refresh <id>  — 刷新 Minecraft 目录中的版本。
+ruri directory remove <id> --yes  — 从 Ruri 中移除目录，保留文件。
+ruri directory rename <id> <name>  — 更改已添加目录的显示名称。
+ruri directory relocate <id> <path>  — 重新指定已移动的游戏目录的位置。
+ruri directory restore <id> <path>  — 恢复暂时无法访问的 Minecraft 目录。
+ruri directory run get <instance>  — 查询实例的游戏目录。
+ruri directory run set <instance> <mode>  — 切换实例的运行目录。
+ruri directory run relocate <instance> <path>  — 重新指定已移动的自定义游戏目录的位置。
+ruri java list  — 列出本地 Java 运行时及其来源。
+ruri java available  — 列出可安装的 Java 运行时。
+ruri java add <path>  — 添加已安装的 Java。
+ruri java forget <path>  — 从手动添加的列表中移除 Java，保留文件和使用它的配置。
+ruri java default <path-or-automatic>  — 设置默认使用的 Java。
+ruri java references <id>  — 列出使用指定托管 Java 的配置。
+ruri java install <id>  — 使用 java catalog 返回的 ID 安装 Java。
+ruri java repair <id>  — 修复托管的 Java 运行时。
+ruri java remove <id> --yes  — 将托管的 Java 移到废纸篓。
+ruri account list  — 列出账号，不显示凭据。
+ruri account selected  — 查询当前账号 ID。
+ruri account show <id>  — 查询账号详情。
+ruri account add-offline <username>  — 添加或复用离线账号。
+ruri account select <id>  — 选择当前使用的账号。
+ruri account refresh <id>  — 刷新已保存账号的凭据。
+ruri account remove <id> --yes  — 移除账号及其本地凭据。
+ruri account logout <id> --yes  — 注销第三方登录凭据并移除账号。
+ruri account login start --provider <microsoft|external>  — 开始 Microsoft 或第三方账号登录流程，稍后完成授权。
+ruri account login complete <flow>  — 等待授权完成并保存所选角色。
+ruri account login cancel <flow>  — 取消待完成的登录流程。
+ruri account service-key status  — 检查 CurseForge API Key 是否可用。
+ruri account service-key set --stdin  — 从标准输入设置 CurseForge API Key。
+ruri account service-key remove --yes  — 移除自定义 CurseForge API Key。
+ruri launch preflight <instance>  — 检查实例启动配置，不启动游戏。
+ruri launch start <instance>  — 启动游戏，并在监控组件开始接管运行后返回。
+ruri server list  — 全部
+ruri server add <address>  — 添加服务器
+ruri server edit <instance> <entry>  — 编辑服务器
+ruri server remove <instance> <entry> --yes  — 从实例移除
+ruri server move <instance> <entry> <position>  — 管理服务器
+ruri server favorite <address> --value <true|false>  — 固定到主页
+ruri server preferences <address>  — 服务器设置
+ruri server query <address>  — 查询状态
+ruri session list  — 列出游戏运行记录。
+ruri session show <instance> <session>  — 查询游戏运行详情。
+ruri session wait <instance> <session>  — 等待监控记录游戏退出。
+ruri session quit <instance> <session>  — 请求游戏正常退出。
+ruri session stop <instance> <session> --yes  — 强制终止游戏进程。
+ruri session logs <instance> <session>  — 读取本次运行的日志，或持续输出新日志。
+ruri session diagnose <instance> <session>  — 分析已记录的启动信息和游戏日志。
+ruri session export <instance> <session> <file>  — 隐藏敏感信息后导出诊断报告。
+ruri catalog search [<query>]  — 搜索 Modrinth 或 CurseForge。
+ruri catalog show <project>  — 查询项目简介及详细信息。
+ruri catalog versions <project>  — 列出项目已发布的版本。
+ruri catalog categories  — 列出内容平台的分类。
+ruri content list <instance>  — 列出已安装的模组、资源包或光影包。
+ruri content import <instance> <file>  — 导入本地资源文件。
+ruri content install <instance> <project>  — 安装兼容的项目及其必需依赖。
+ruri content enable <instance>  — 启用所选资源。
+ruri content disable <instance>  — 停用所选资源。
+ruri content remove <instance> --yes  — 将所选资源移到废纸篓。
+ruri content update-check <instance>  — 检查已安装资源的兼容更新。
+ruri content update <instance>  — 更新所选资源及其依赖。
+ruri world list <instance>  — 列出实例中的存档。
+ruri world show <instance> <folder>  — 查询存档详情。
+ruri world import <instance> <file>  — 导入存档压缩包或文件夹。
+ruri world export <instance> <folder> <file>  — 导出存档压缩包。
+ruri world remove <instance> <folder> --yes  — 将存档移到废纸篓。
+ruri world backup create <instance> <folder>  — 备份存档。
+ruri world backup list <instance>  — 列出存档备份。
+ruri world backup restore <instance> <backup> --yes  — 恢复备份，覆盖已有存档时需要确认。
+ruri world backup remove <instance> <backup> --yes  — 将存档备份移到废纸篓。
+ruri datapack list <instance> <world>  — 列出存档中的数据包。
+ruri datapack order get <instance> <world>  — 按优先级从高到低查询数据包顺序。
+ruri datapack order set <instance> <world> --key <key>…  — 设置完整的数据包优先级顺序。
+ruri datapack import <instance> <world> <file>  — 将数据包导入存档。
+ruri datapack enable <instance> <world> <name>  — 启用存档中的数据包。
+ruri datapack disable <instance> <world> <name>  — 停用存档中的数据包。
+ruri datapack remove <instance> <world> <name> --yes  — 移除存档中的数据包。
+ruri datapack search <instance> <query>  — 搜索兼容的 Modrinth 数据包。
+ruri datapack versions <instance> <project>  — 列出兼容的数据包版本。
+ruri datapack install <instance> <world> <project>  — 安装数据包及其依赖。
+ruri schematic list <instance>  — 列出投影文件及文件夹。
+ruri schematic info <instance> <path>  — 查询投影文件的详细信息。
+ruri schematic import <instance> <file>  — 导入投影文件。
+ruri schematic mkdir <instance> <name>  — 创建投影文件夹。
+ruri schematic export <instance> <path> <file>  — 导出投影文件。
+ruri schematic remove <instance> <path> --yes  — 将投影文件或文件夹移到废纸篓。
+ruri instance import <file> --name <name> --directory <directory>  — 将实例归档导入指定目录。
+ruri pack import <file> --name <name> --directory <directory>  — 导入本地整合包归档。
+ruri pack install <project> --name <name> --directory <directory>  — 下载并安装内容平台上的整合包。
+ruri pack show <instance>  — 查询已安装整合包的信息。
+ruri pack update-check <instance>  — 列出已安装整合包的可用版本。
+ruri pack update <instance>  — 预览或执行整合包更新。
+ruri pack rollback <instance> --yes  — 回退上一次整合包更新，保留更新后的本地修改。
+ruri download fetch <url> <file> --sha1 <sha1> --size <size>  — 下载文件并校验 SHA-1 和大小。
+ruri cache status  — 显示清理下载缓存可释放的空间。
+ruri cache clean  — 删除不再被任何实例使用的缓存文件。
+ruri recovery list  — 列出未完成的数据操作和运行记录。
+ruri recovery apply <kind> <target> --yes  — 恢复指定的未完成操作。
+ruri doctor  — 检查状态、路径、Java、账号凭据及内置辅助程序。
+
+查看命令：ruri help <资源> 显示该组命令的用法；ruri help --all 显示完整速查表。
+使用 list 返回的完整 ID 指定目标；修改时需明确指定目标，可用 selected 查询当前选择。支持 --dry-run 的命令可先预览；删除等操作需要 --yes，覆盖还需要 --replace。
+默认输出简洁文本；--json 返回格式稳定的结构化结果；--output ndjson 返回事件流。--data-dir <路径> 指定数据目录；--language en|zh-Hans；--quiet 隐藏进度。
+列表默认最多 50 项，--limit <1…1000> / --offset <数量> 分页，--all 返回全部。
+查询命令结构：ruri schema <资源> <动作> --input 或 --output-schema；配置命令可加 --scope app|defaults|instance。

@@ -4,7 +4,7 @@ import Testing
 @testable import RuriVex
 
 struct VexLeaseIntegrationTests {
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_LEASE_ROOM"] != nil))
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_URL"] != nil && ProcessInfo.processInfo.environment["VEX_IT_LEASE_ROOM"] != nil))
     func cancelledRenewalRetainsItsReceiptForRelease() async throws {
         let environment = ProcessInfo.processInfo.environment
         let baseURL = try VexSettings.normalizedURL(#require(environment["VEX_IT_URL"]))

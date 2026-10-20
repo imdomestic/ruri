@@ -4,7 +4,7 @@ import RuriLocalization
 @testable import RuriVex
 
 struct VexDeviceIntegrationTests {
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_DEVICE_EXPIRY_URL"] != nil))
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_URL"] != nil && ProcessInfo.processInfo.environment["VEX_DEVICE_EXPIRY_URL"] != nil))
     func realUnapprovedDeviceAuthorizationExpiresWithoutSavingCredentials() async throws {
         let baseURL = try VexSettings.normalizedURL(#require(ProcessInfo.processInfo.environment["VEX_DEVICE_EXPIRY_URL"]))
         let server = try VexServer(baseURL: baseURL, name: "device-expiry-validation")
@@ -19,7 +19,7 @@ struct VexDeviceIntegrationTests {
         }
     }
 
-    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_DEVICE_CANCEL_URL"] != nil))
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["VEX_IT_URL"] != nil && ProcessInfo.processInfo.environment["VEX_DEVICE_CANCEL_URL"] != nil))
     func realUnapprovedDeviceAuthorizationCanBeCancelled() async throws {
         let baseURL = try VexSettings.normalizedURL(#require(ProcessInfo.processInfo.environment["VEX_DEVICE_CANCEL_URL"]))
         let server = try VexServer(baseURL: baseURL, name: "device-cancellation-validation")

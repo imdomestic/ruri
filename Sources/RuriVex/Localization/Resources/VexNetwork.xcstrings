@@ -1,0 +1,52 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "VexNetwork.addressHelp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTTPS server address; the CLI allows HTTP only for loopback addresses."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTTPS 服务器地址；CLI 仅允许回环地址使用 HTTP。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTTPS 伺服器位址；CLI 僅允許回環位址使用 HTTP。"
+          }
+        }
+      }
+    },
+    "VexNetwork.httpsRequired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server address must use HTTPS."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器地址必须使用 HTTPS。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "伺服器位址必須使用 HTTPS。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

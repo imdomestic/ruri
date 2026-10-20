@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+import plistlib
 import re
 import sys
 sys.dont_write_bytecode = True
@@ -139,7 +140,7 @@ def read_catalogs(root, check_format=False, format_files=False):
     resources = root / 'Sources/RuriLocalization/Resources'
     catalogs = {}
     keys = set()
-    paths = sorted(resources.glob('*.xcstrings'))
+    paths = sorted([*resources.glob('*.xcstrings'), *root.glob('Sources/*/Localization/Resources/*.xcstrings')])
     if not paths:
         raise ValueError('No String Catalogs found')
     for path in paths:
@@ -179,8 +180,46 @@ def read_catalogs(root, check_format=False, format_files=False):
                 raise ValueError(f'{identity}: {error}') from error
             catalogs[identity] = {'table': path.stem, 'key': key, 'group': group, 'name': name,
                                   'value': value, 'kinds': [expected[i + 1] for i in range(len(expected))],
-                                  'plurals': plurals, 'entry': entry}
+                                  'plurals': plurals, 'entry': entry, 'module': path.relative_to(root / 'Sources').parts[0],
+                                  'output': resources.parent / 'Generated' if path.parent == resources else path.parent.parent / 'Generated'}
     return catalogs
+
+
+def plural_rule(specifier, variants):
+    return {'NSStringFormatSpecTypeKey': 'NSStringPluralRuleType', 'NSStringFormatValueTypeKey': specifier, **variants}
+
+
+def compiled_entry(node):
+    if 'variations' in node:
+        variants = plural_variants(node)
+        (argument,) = localization_value(node)[2]
+        tokens = [m for m in FORMAT.finditer(variants['other']) if m[2] != '%']
+        specifier = next(m[2] for position, m in enumerate(tokens, 1) if (int(m[1]) if m[1] else position) == argument)
+        key = '%#@value@' if argument == 1 else f'%{argument}$#@value@'
+        return {'NSStringLocalizedFormatKey': key, 'value': plural_rule(specifier, variants)}
+    entry = {'NSStringLocalizedFormatKey': unit_value(node)}
+    for name, rule in node.get('substitutions', {}).items():
+        entry[name] = plural_rule(rule['formatSpecifier'], plural_variants(rule))
+    return entry if len(entry) > 1 else entry['NSStringLocalizedFormatKey']
+
+
+def compile_catalogs(root, bundle):
+    tables = {}
+    for item in read_catalogs(root).values():
+        if bundle.name != 'Ruri_' + item['module'] + '.bundle':
+            continue
+        for language, node in item['entry']['localizations'].items():
+            entry = compiled_entry(node)
+            kind = 'stringsdict' if isinstance(entry, dict) else 'strings'
+            tables.setdefault((language, item['table'], kind), {})[item['key']] = entry
+    if not tables:
+        raise ValueError('No String Catalogs for bundle: ' + str(bundle))
+    for (language, table, kind), entries in tables.items():
+        path = bundle / f'{language}.lproj/{table}.{kind}'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(plistlib.dumps(entries))
+    for catalog in bundle.glob('*.xcstrings'):
+        catalog.unlink()
 
 
 def source_hash(item):

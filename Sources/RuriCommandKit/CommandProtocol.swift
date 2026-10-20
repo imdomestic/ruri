@@ -5,35 +5,44 @@ import RuriCore
 
 public typealias Value = OperationValue
 
-struct CommonOptions: ParsableArguments {
-    @Flag(help: ArgumentHelp(Messages.CLIInterface.jsonOutputHelp.localized)) var json = false
-    @Option(help: ArgumentHelp(Messages.CLIInterface.outputFormatHelp.localized)) var output: String = "text"
-    @Option(help: ArgumentHelp(Messages.CLIInterface.dataDirectoryHelp.localized)) var dataDir: String?
-    @Option(help: ArgumentHelp(Messages.CLIInterface.messageLanguageHelp.localized)) var language: String?
-    @Flag(help: ArgumentHelp(Messages.CLIInterface.quietProgressHelp.localized)) var quiet = false
+package struct CommonOptions: ParsableArguments {
+    @Flag(help: ArgumentHelp(Messages.CLIInterface.jsonOutputHelp.localized)) package var json = false
+    @Option(help: ArgumentHelp(Messages.CLIInterface.outputFormatHelp.localized)) package var output: String = "text"
+    @Option(help: ArgumentHelp(Messages.CLIInterface.dataDirectoryHelp.localized)) package var dataDir: String?
+    @Option(help: ArgumentHelp(Messages.CLIInterface.messageLanguageHelp.localized)) package var language: String?
+    @Flag(help: ArgumentHelp(Messages.CLIInterface.quietProgressHelp.localized)) package var quiet = false
+    package init() {}
 }
 
-struct ParameterSpec: Codable, Sendable {
-    let name: String
-    let type: String
-    let required: Bool
-    let help: String
-    var values: [String] = []
+package struct ParameterSpec: Codable, Sendable {
+    package let name: String
+    package let type: String
+    package let required: Bool
+    package let help: String
+    package var values: [String] = []
+    package init(name: String, type: String, required: Bool, help: String, values: [String] = []) {
+        self.name = name; self.type = type; self.required = required; self.help = help; self.values = values
+    }
 }
 
-struct CommandSpec: Encodable, Sendable {
-    let path: [String]
-    let summary: String
-    var operands: [ParameterSpec] = []
-    var options: [ParameterSpec] = []
-    var mutation = false
-    var confirmation = false
-    var userParticipation = false
-    var examples: [String] = []
+package struct CommandSpec: Encodable, Sendable {
+    package let path: [String]
+    package let summary: String
+    package var operands: [ParameterSpec] = []
+    package var options: [ParameterSpec] = []
+    package var mutation = false
+    package var confirmation = false
+    package var userParticipation = false
+    package var examples: [String] = []
+    package init(path: [String], summary: String, operands: [ParameterSpec] = [], options: [ParameterSpec] = [],
+                 mutation: Bool = false, confirmation: Bool = false, userParticipation: Bool = false, examples: [String] = []) {
+        self.path = path; self.summary = summary; self.operands = operands; self.options = options
+        self.mutation = mutation; self.confirmation = confirmation; self.userParticipation = userParticipation; self.examples = examples
+    }
     var supportsDryRun: Bool { options.contains { $0.name == "dry-run" } }
     var configuration: CommandConfiguration { .init(commandName: path.last!, abstract: summary) }
     enum CodingKeys: String, CodingKey { case path, summary, operands, options, mutation, confirmation, userParticipation, examples, supportsDryRun, inputSchema, resultSchema, sideEffects }
-    func encode(to encoder: Encoder) throws {
+    package func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(path, forKey: .path); try c.encode(summary, forKey: .summary)
         try c.encode(operands, forKey: .operands); try c.encode(options, forKey: .options)
@@ -46,33 +55,33 @@ struct CommandSpec: Encodable, Sendable {
     }
 }
 
-protocol ExecutableCommand: ParsableCommand {
+package protocol ExecutableCommand: ParsableCommand {
     static var spec: CommandSpec { get }
     var common: CommonOptions { get }
     var operands: [String] { get }
     var parameters: [String: Value] { get }
 }
 
-extension ExecutableCommand {
+package extension ExecutableCommand {
     static var configuration: CommandConfiguration { spec.configuration }
     var request: CommandRequest { .init(spec: Self.spec, common: common, operands: operands, options: parameters) }
 }
 
-struct CommandRequest: Sendable {
-    let spec: CommandSpec
-    let common: CommonOptions
-    let operands: [String]
-    let options: [String: Value]
+package struct CommandRequest: Sendable {
+    package let spec: CommandSpec
+    package let common: CommonOptions
+    package let operands: [String]
+    package let options: [String: Value]
     var path: String { spec.path.joined(separator: " ") }
-    var dryRun: Bool { flag("dry-run") }
-    func flag(_ name: String) -> Bool { options[name]?.bool ?? false }
-    func string(_ name: String) -> String? { options[name]?.string }
+    package var dryRun: Bool { flag("dry-run") }
+    package func flag(_ name: String) -> Bool { options[name]?.bool ?? false }
+    package func string(_ name: String) -> String? { options[name]?.string }
     func integer(_ name: String) -> Int? { options[name]?.int }
-    func required(_ name: String) throws -> String {
+    package func required(_ name: String) throws -> String {
         guard let value = string(name), !value.isEmpty else { throw OperationFailure("INVALID_ARGUMENT", Messages.CLIInterface.missingOption(String(describing: name)).localized) }
         return value
     }
-    func operand(_ index: Int = 0) throws -> String {
+    package func operand(_ index: Int = 0) throws -> String {
         guard operands.indices.contains(index) else { throw OperationFailure("INVALID_ARGUMENT", Messages.CLIInterface.missingArgument(String(describing: spec.operands[safe: index]?.name ?? String(index + 1))).localized) }
         return operands[index]
     }

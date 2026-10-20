@@ -55,7 +55,7 @@ public final class CommandOutput: @unchecked Sendable {
             else { emit(value) }
         }
     }
-    func help(_ text: String) { withOutputContext { write(Data((text + "\n").utf8), false) } }
+    package func help(_ text: String) { withOutputContext { write(Data((text + "\n").utf8), false) } }
     private func clean(_ value: Value) -> Value {
         switch value {
         case .string(let s): .string(redactor.redact(s))

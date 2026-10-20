@@ -35,8 +35,8 @@ final class LocalContentMetadataCache: @unchecked Sendable {
         var parsed: Bool? = nil
         var isParsed: Bool { parsed != false }
         var cost: Int {
-            let local = [metadata?.id, metadata?.name, metadata?.version, metadata?.summary, metadata?.homepage?.absoluteString, metadata?.iconPath, pack?.summary, pack?.iconPath]
-                .compactMap { $0 }.reduce(0) { $0 + $1.utf8.count } + (metadata?.authors.reduce(0) { $0 + $1.utf8.count } ?? 0)
+            let fields: [String?] = [metadata?.id, metadata?.name, metadata?.version, metadata?.summary, metadata?.homepage?.absoluteString, metadata?.iconPath, pack?.summary, pack?.iconPath]
+            let local = fields.compactMap { $0 }.reduce(0) { $0 + $1.utf8.count } + (metadata?.authors.reduce(0) { $0 + $1.utf8.count } ?? 0)
             let online = identities?.reduce(0) { $0 + 1024 + $1.record.title.utf8.count + ($1.summary?.utf8.count ?? 0) } ?? 0
             return 512 + local + online
         }

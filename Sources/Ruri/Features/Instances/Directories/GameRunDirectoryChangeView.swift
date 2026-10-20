@@ -28,6 +28,9 @@ struct GameRunDirectoryChangeView: View {
     }
     private var checking: Bool { loading || registering }
     private var needsFolder: Bool { target == .custom && customDirectory == nil }
+    private var previewTaskID: String {
+        "\(target.rawValue)\(customDirectory?.url.path ?? "")\(selectionRequest.uuidString)\(refresh.uuidString)"
+    }
     private var destination: URL? {
         if target == .custom {
             return registering || registrationIssue != nil ? chosenURL ?? customDirectory?.url : customDirectory?.url
@@ -71,7 +74,7 @@ struct GameRunDirectoryChangeView: View {
             } catch { if !Task.isCancelled { preview = nil; registrationIssue = error.localizedDescription } }
             if !Task.isCancelled { registering = false }
         }
-        .task(id: target.rawValue + (customDirectory?.url.path ?? "") + selectionRequest.uuidString + refresh.uuidString) {
+        .task(id: previewTaskID) {
             guard !registering else { loading = false; return }
             if preview?.targetMode != target || preview?.target != destination { preview = nil }
             issue = nil; registrationIssue = nil; loading = true

@@ -12,8 +12,7 @@ enum CommandHelp {
     }
 
     static func commandType(_ path: [String]) -> (any ParsableCommand.Type)? {
-        // MARK: Vex (experimental)
-        var type: any ParsableCommand.Type = VexCLI.root
+        var type: any ParsableCommand.Type = ExperimentalCommandRegistry.root
         for component in path {
             guard let child = type.configuration.subcommands.first(where: { $0.configuration.commandName == component }) else { return nil }
             type = child
@@ -49,11 +48,11 @@ enum CommandHelp {
         guard commandType(path) != nil else {
             throw OperationFailure("INVALID_ARGUMENT", Messages.CLIExperience.unknownHelp(path.joined(separator: " ")).localized)
         }
-        let matches = VexCLI.commands.filter { $0.path.starts(with: path) }
+        let matches = ExperimentalCommandRegistry.commands.filter { $0.path.starts(with: path) }
         let exact = matches.first { $0.path == path }
         var lines = ["USAGE: " + (exact.map(signature) ?? (["ruri"] + path + ["<subcommand>"]).joined(separator: " ")) + " [options]", ""]
         if path.isEmpty && !all {
-            lines += VexCLI.root.configuration.subcommands.map { "  " + ($0.configuration.commandName ?? "") + "  " + $0.configuration.abstract }
+            lines += ExperimentalCommandRegistry.root.configuration.subcommands.map { "  " + ($0.configuration.commandName ?? "") + "  " + $0.configuration.abstract }
         } else {
             if let exact { lines.append(exact.summary) }
             for spec in matches {

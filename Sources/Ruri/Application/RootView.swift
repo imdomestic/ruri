@@ -2,6 +2,7 @@ import RuriLocalization
 import SwiftUI
 import AppKit
 import RuriCore
+import RuriExtensionKit
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
@@ -16,8 +17,8 @@ struct RootView: View {
     /// Pinned servers on the home page keep their own status rounds.
     @State private var homeServers = ServerNavigationState()
     @State private var accountsNavigation = AccountsNavigationState()
-    // MARK: Vex (experimental)
-    @State private var vex = VexPresentation()
+    @State private var experimentalSheet: ExtensionSheet?
+    private struct ExtensionSheet: Identifiable { let id = UUID(); let content: AnyView }
     private var hasCollectionColumn: Bool { model.page == .library || model.page == .accounts || model.page == .servers }
     private let collectionMinimumWidth: CGFloat = 280
     private let collectionToolbarWidth: CGFloat = 420
@@ -71,7 +72,7 @@ struct RootView: View {
                 } detail: {
                     Group {
                         switch model.page {
-                        case .vexGit: VexGitView()
+                        case .experimental(let id, _, _): ExperimentalUIRegistry.page(id, host: model.experimentalHost)
                         case .home, .library, .accounts, .servers: HomeView(servers: homeServers)
                         case .discover: DiscoverView()
                         case .history: GameHistoryView(cache: historyCache, instanceID: model.historyInstanceID)
@@ -87,15 +88,19 @@ struct RootView: View {
             }
         }
         .frame(minWidth: minimumWindowWidth, minHeight: 600)
-        // MARK: Vex (experimental)
-        .environment(vex)
-        .task(id: VexConnectionIdentity(settings: model.state.settings.experimental?.vex)) {
-            vex.configure(settings: model.state.settings.experimental?.vex ?? VexSettings(), paths: model.paths)
+        .onOpenURL { url in
+            do {
+                if let view = try ExperimentalUIRegistry.open(url, host: model.experimentalHost) {
+                    model.openMainWindow?(); experimentalSheet = ExtensionSheet(content: view)
+                }
+            } catch { model.error = error.localizedDescription }
         }
-        .onChange(of: model.state.settings.experimental?.vex?.enabled) {
-            if model.state.settings.experimental?.vex?.enabled != true {
-                vex.stop()
-                if model.page == .vexGit { model.page = .home }
+        .sheet(item: $experimentalSheet) { $0.content }
+        .task(id: model.state.settings.experimental) {
+            await ExperimentalUIRegistry.configure(host: model.experimentalHost)
+            if case .experimental(let id, _, _) = model.page,
+               !ExperimentalUIRegistry.pages(host: model.experimentalHost).contains(where: { $0.id == id }) {
+                experimentalSheet = nil; model.page = .home
             }
         }
         .sheet(isPresented: Bindable(model).showCLISetup) { CLIOnboardingView() }
@@ -188,9 +193,8 @@ private struct RootSidebar: View {
         NavigationStack {
             List(selection: $model.page) {
                 Section { ForEach([Page.home, .library, .servers, .discover]) { page in sidebarRow(page) } }
-                // MARK: Vex (experimental)
-                if model.state.settings.experimental?.vex?.enabled == true {
-                    Section(Messages.Vex.title.localized) { sidebarRow(.vexGit) }
+                ForEach(ExperimentalUIRegistry.pages(host: model.experimentalHost)) { page in
+                    Section { sidebarRow(.experimental(id: page.id, title: page.title, symbol: page.symbol)) }
                 }
                 Section(Messages.AppRootView.records.localized) { ForEach([Page.history, .activity]) { page in sidebarRow(page) } }
                 Section(Messages.AppRootView.manage.localized) { ForEach([Page.accounts, .java, .settings]) { page in sidebarRow(page) } }

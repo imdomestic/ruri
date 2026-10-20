@@ -20,12 +20,12 @@ public enum LocalizationResources {
         return nil
     }()
 
-    public static func installedBundle(executable: URL, mainResources: URL?) -> Bundle? {
+    public static func installedBundle(executable: URL, mainResources: URL?, name: String = bundleName) -> Bundle? {
         let parent = executable.resolvingSymlinksInPath().deletingLastPathComponent()
         var candidates = [mainResources, parent].compactMap { $0 }
         if ["Helpers", "MacOS"].contains(parent.lastPathComponent), parent.deletingLastPathComponent().lastPathComponent == "Contents" {
             candidates.insert(parent.deletingLastPathComponent().appendingPathComponent("Resources"), at: 0)
         }
-        return candidates.lazy.compactMap { Bundle(url: $0.appendingPathComponent(bundleName + ".bundle")) }.first
+        return candidates.lazy.compactMap { Bundle(url: $0.appendingPathComponent(name + ".bundle")) }.first
     }
 }

@@ -19,7 +19,7 @@ BRANDS = {'Ruri', 'Minecraft', 'Java', 'Microsoft', 'Modrinth', 'CurseForge', 'F
 
 def candidates(root):
     for path in sorted((root / 'Sources').rglob('*.swift')):
-        if 'RuriLocalization' in path.parts:
+        if 'RuriLocalization' in path.parts or path.parent.name == 'Generated' and path.parent.parent.name == 'Localization':
             continue
         source = path.read_text()
         scanner = Scanner(source)

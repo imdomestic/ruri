@@ -2,12 +2,14 @@ import RuriLocalization
 import SwiftUI
 import AppKit
 import RuriCore
+import RuriFeatureRegistration
 
 @main struct RuriApp: App {
     @State private var model: AppModel
     @State private var updater = SoftwareUpdater()
     @NSApplicationDelegateAdaptor(RuriLifecycle.self) private var lifecycle
     init() {
+        CompiledExperimentalFeatures.register()
         if let status = LocalizationCommandLine.resourceCheck() { exit(status) }
         _model = State(initialValue: AppModel())
     }

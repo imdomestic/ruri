@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+#if canImport(Sparkle)
 import Sparkle
 
 /// Sparkle updates from the per-architecture appcast that the Appcast workflow
@@ -60,3 +61,14 @@ import Sparkle
         lastUpdateCheckDate = updater.lastUpdateCheckDate
     }
 }
+#else
+@MainActor @Observable final class SoftwareUpdater {
+    let isAvailable = false
+    let canCheckForUpdates = false
+    let lastUpdateCheckDate: Date? = nil
+    var automaticallyChecksForUpdates = false
+    var automaticallyDownloadsUpdates = false
+    var receivesPrereleases = false
+    func checkForUpdates() {}
+}
+#endif

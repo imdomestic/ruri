@@ -16,8 +16,7 @@ public enum CLIApplication {
         }
         let context = LocalizationContext.commandLine(language: language)
         return await LocalizationContext.$current.withValue(context) {
-            // MARK: Vex (experimental)
-            await VexCLI.withSettings(arguments: args) { await runLocalized(args, write: write) }
+            await ExperimentalCommandRegistry.withSettings(arguments: args) { await runLocalized(args, write: write) }
         }
     }
 
@@ -25,8 +24,7 @@ public enum CLIApplication {
         var output = CommandOutput(format: requestedFormat(args), quiet: args.contains("--quiet"), write: write)
         var activeRequest: CommandRequest?
         do {
-            // MARK: Vex (experimental)
-            if args.first == "vex" { try VexCLI.requireEnabled() }
+            try ExperimentalCommandRegistry.requireEnabled(args.first)
             if args.first == "help" {
                 let query: CommandHelp.Query
                 do { query = try CommandHelp.Query.parse(Array(args.dropFirst())) }
@@ -46,7 +44,7 @@ public enum CLIApplication {
             }
             let command: any ExecutableCommand
             do {
-                var parsed = try VexCLI.root.parseAsRoot(args)
+                var parsed = try ExperimentalCommandRegistry.root.parseAsRoot(args)
                 if let executable = parsed as? any ExecutableCommand { command = executable }
                 else {
                     // ArgumentParser returns a built-in help command carrying
@@ -104,9 +102,8 @@ public enum CLIApplication {
     }
 
     @MainActor static func execute(_ request: CommandRequest, output: CommandOutput) async throws -> Value {
-        // MARK: Vex (experimental)
-        if request.spec.path.first == "vex" { return try await manageVex(request, output: output) }
-        if let value = try VexCLI.configure(request, paths: basePaths(request)) { return value }
+        if let value = try await ExperimentalCommandRegistry.execute(request, output: output) { return value }
+        if let value = try ExperimentalCommandRegistry.configure(request, paths: basePaths(request)) { return value }
         if request.spec.path.first == "config" { return try configure(request) }
         if request.spec.path.first == "doctor" { return try await doctor(request) }
         if request.spec.path.first == "recovery" { return try await manageRecovery(request, output: output) }
@@ -156,7 +153,7 @@ public enum CLIApplication {
         default: throw OperationFailure("NOT_FOUND", Messages.CLIInterface.unknownCommand.localized)
         }
     }
-    static func basePaths(_ request: CommandRequest) -> LauncherPaths {
+    package static func basePaths(_ request: CommandRequest) -> LauncherPaths {
         LauncherPaths(root: (request.common.dataDir ?? ProcessInfo.processInfo.environment["RURI_DATA_DIR"]).map { URL(fileURLWithPath: $0) })
     }
     private static func requestedFormat(_ args: [String]) -> CommandOutput.Format {

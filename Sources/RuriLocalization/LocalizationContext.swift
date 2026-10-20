@@ -106,12 +106,16 @@ public struct LocalizationContext: Sendable {
         guard !message.key.isEmpty else { return message.fallback }
         // Unknown persisted messages are displayed as their recorded fallback.
         // They must not supply an unchecked printf format to Foundation.
-        guard let definition = MessageCatalog.definitions[message.table + ":" + message.key],
+        let external = LocalizationCatalogRegistry.catalog(message.table)
+        guard let definition = MessageCatalog.definitions[message.table + ":" + message.key] ?? external?.definitions[message.table + ":" + message.key],
               definition.accepts(message.arguments) else { return message.fallback }
         let missing = "__RURI_MISSING_LOCALIZATION_817995BA__"
         var template = definition.fallback
         var formatLanguage = Self.baseLanguage
-        for (language, bundle) in fallbackBundles {
+        let bundles = external.map { catalog in
+            LocalizationContext(language: language, region: regionIdentifier, resources: catalog.bundle, commandLine: true).fallbackBundles
+        } ?? fallbackBundles
+        for (language, bundle) in bundles {
             let value = bundle.localizedString(forKey: message.key, value: missing, table: message.table)
             if value != missing {
                 template = value

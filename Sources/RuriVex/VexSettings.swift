@@ -91,6 +91,7 @@ public enum VexTokenStore {
             if status == errSecItemNotFound {
                 var add = query(url).merging(value) { _, new in new }
                 add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+                add[kSecAttrAccess as String] = try access()
                 let created = SecItemAdd(add as CFDictionary, nil)
                 guard created == errSecSuccess else { throw failure(created) }
             } else if status != errSecSuccess { throw failure(status) }
@@ -129,6 +130,29 @@ public enum VexTokenStore {
         ] as CFDictionary)
         guard status == errSecSuccess else { throw failure(status) }
         cache.invalidate(baseURL: url)
+    }
+    // GUI 与随附 CLI 是不同的可执行文件；默认访问对象只允许创建者删除，因此显式信任两者并授予 Delete。
+    private static func access() throws -> SecAccess {
+        var paths: [String?] = [nil]
+        if let application = RuriInstallation.application(), let cli = RuriInstallation.cliExecutable {
+            paths = [application.path, cli.path]
+        }
+        let applications = try paths.map { path in
+            var application: SecTrustedApplication?
+            let status = SecTrustedApplicationCreateFromPath(path, &application)
+            guard status == errSecSuccess, let application else { throw failure(status) }
+            return application
+        }
+        var access: SecAccess?
+        let created = SecAccessCreate(service as CFString, applications as CFArray, &access)
+        guard created == errSecSuccess, let access else { throw failure(created) }
+        guard let trusted = SecAccessCopyMatchingACLList(access, kSecACLAuthorizationDecrypt) as? [SecACL], trusted.count == 1 else {
+            throw failure(errSecACLNotSimple)
+        }
+        let authorizations = SecACLCopyAuthorizations(trusted[0]) as? [String] ?? []
+        let updated = SecACLUpdateAuthorizations(trusted[0], (authorizations + [kSecACLAuthorizationDelete as String]) as CFArray)
+        guard updated == errSecSuccess else { throw failure(updated) }
+        return access
     }
     private static func failure(_ status: OSStatus) -> RuriError { .message(Messages.CoreAuthentication.keychainAccessFailed(String(status))) }
 }

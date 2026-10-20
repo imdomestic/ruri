@@ -9,3 +9,6 @@ references/
 xcuserdata/
 /.private/
 __pycache__/
+.direnv/
+result
+result-*

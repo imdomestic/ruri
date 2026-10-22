@@ -3,18 +3,18 @@ import RuriCore
 
 /// JSON Schema for the command boundary, independent of Swift's persistence
 /// encoding. Payload properties are additive within schemaVersion 1.
-enum CommandSchemas {
-    static let string: Value = .object(["type": .string("string")])
-    static let boolean: Value = .object(["type": .string("boolean")])
-    static let number: Value = .object(["type": .string("number")])
-    static let integer: Value = .object(["type": .string("integer")])
+package enum CommandSchemas {
+    package static let string: Value = .object(["type": .string("string")])
+    package static let boolean: Value = .object(["type": .string("boolean")])
+    package static let number: Value = .object(["type": .string("number")])
+    package static let integer: Value = .object(["type": .string("integer")])
     static let null: Value = .object(["type": .string("null")])
-    static func object(_ properties: [String: Value], required: [String] = []) -> Value {
+    package static func object(_ properties: [String: Value], required: [String] = []) -> Value {
         .object(["type": .string("object"), "properties": .object(properties), "required": .array(required.map(Value.string)), "additionalProperties": .bool(true)])
     }
-    static func array(_ item: Value) -> Value { .object(["type": .string("array"), "items": item]) }
-    static func nullable(_ value: Value) -> Value { .object(["anyOf": .array([value, null])]) }
-    static func page(_ item: Value) -> Value { object(["items": array(item), "total": integer, "offset": integer, "hasMore": boolean, "issues": array(object([:]))]) }
+    package static func array(_ item: Value) -> Value { .object(["type": .string("array"), "items": item]) }
+    package static func nullable(_ value: Value) -> Value { .object(["anyOf": .array([value, null])]) }
+    package static func page(_ item: Value) -> Value { object(["items": array(item), "total": integer, "offset": integer, "hasMore": boolean, "issues": array(object([:]))]) }
     static func fields(_ names: String, type: Value = string) -> [String: Value] { Dictionary(uniqueKeysWithValues: names.split(separator: ",").map { (String($0), type) }) }
     static let instance = object(fields("id,name,gameVersion,directoryID,runDirectory,instanceDirectory,gameDirectory,iconGlyph,iconTint,issue", type: nullable(string))
         .merging(["installed": boolean, "favorite": boolean, "hasCustomIcon": boolean, "components": array(object(fields("loader,version")))]) { _, new in new })
@@ -63,6 +63,7 @@ enum CommandSchemas {
     }
     static func sideEffects(_ spec: CommandSpec) -> [String] {
         guard spec.mutation else { return [] }
+        if let effects = ExperimentalCommandRegistry.sideEffects(spec) { return effects }
         switch spec.path.first {
         case "config": return ["configuration"]
         case "app": return ["preferences"]
@@ -102,6 +103,7 @@ enum CommandSchemas {
                       required: ["schemaVersion", "ok", "data", "warnings", "error"])
     }
     static func payload(_ spec: CommandSpec) -> Value {
+        if let result = ExperimentalCommandRegistry.schema(spec) { return result }
         let p = spec.path, action = p.last!, path = p.joined(separator: " ")
         if p.first == "config" {
             if action == "fields" {

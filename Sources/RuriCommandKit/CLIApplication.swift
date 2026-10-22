@@ -12,20 +12,24 @@ public enum CLIApplication {
 
     @MainActor static func run(_ arguments: [String], write custom: (@Sendable (Data, Bool) -> Void)?, terminal: TerminalProfile) async -> Int32 {
         let write = custom ?? { data, error in try? (error ? FileHandle.standardError : FileHandle.standardOutput).write(contentsOf: data) }
-        // The shell completion protocol bypasses every presentation layer.
-        if arguments.first == "---completion" { return complete(arguments, write: write) }
-        let invocation = CommandLineInvocation(arguments)
-        let context = LocalizationContext.commandLine(language: invocation.language)
-        return await LocalizationContext.$current.withValue(context) {
-            await runLocalized(invocation, write: write, terminal: terminal)
+        // Enabled extensions decide the command tree, so they are read first.
+        return await ExperimentalCommandRegistry.withSettings(arguments: arguments) {
+            // The shell completion protocol bypasses every presentation layer.
+            if arguments.first == "---completion" { return complete(arguments, write: write) }
+            let invocation = CommandLineInvocation(arguments)
+            let context = LocalizationContext.commandLine(language: invocation.language)
+            return await LocalizationContext.$current.withValue(context) {
+                await runLocalized(invocation, write: write, terminal: terminal)
+            }
         }
     }
 
     private static func complete(_ arguments: [String], write: @Sendable (Data, Bool) -> Void) -> Int32 {
-        do { _ = try RuriCommand.parseAsRoot(arguments); return 1 }
+        let root = ExperimentalCommandRegistry.root
+        do { _ = try root.parseAsRoot(arguments); return 1 }
         catch {
-            let code = RuriCommand.exitCode(for: error).rawValue
-            write(Data((RuriCommand.message(for: error) + "\n").utf8), code != 0)
+            let code = root.exitCode(for: error).rawValue
+            write(Data((root.message(for: error) + "\n").utf8), code != 0)
             return code
         }
     }
@@ -36,6 +40,7 @@ public enum CLIApplication {
         output.setUsage(invocation.path)
         var activeRequest: CommandRequest?
         do {
+            try ExperimentalCommandRegistry.requireEnabled(invocation)
             if invocation.path.isEmpty && invocation.rest.first == "help" {
                 let query: CommandHelp.Query
                 do { query = try CommandHelp.Query.parse(Array(invocation.rest.dropFirst())) }
@@ -65,21 +70,22 @@ public enum CLIApplication {
                 if let problem = invocation.problem() { throw problem }
             }
             let command: any ExecutableCommand
+            let root = ExperimentalCommandRegistry.root
             do {
-                guard let executable = try RuriCommand.parseAsRoot(args) as? any ExecutableCommand else {
+                guard let executable = try root.parseAsRoot(args) as? any ExecutableCommand else {
                     output.help(try CommandHelp.render(path: invocation.path, width: terminal.output.width)); return 0
                 }
                 command = executable
             }
             catch {
-                let code = RuriCommand.exitCode(for: error).rawValue
+                let code = root.exitCode(for: error).rawValue
                 if code == 0 {
                     // Completion scripts and the help dump print as they are.
-                    let message = RuriCommand.message(for: error)
+                    let message = root.message(for: error)
                     write(Data((message + (message.hasSuffix("\n") ? "" : "\n")).utf8), false)
                     return 0
                 }
-                throw CommandLineInvocation.failure(RuriCommand.message(for: error), path: invocation.path)
+                throw CommandLineInvocation.failure(root.message(for: error), path: invocation.path)
             }
             let parsed = command.request
             try parsed.validate()
@@ -120,6 +126,8 @@ public enum CLIApplication {
     }
 
     @MainActor static func execute(_ request: CommandRequest, output: CommandOutput) async throws -> Value {
+        if let value = try await ExperimentalCommandRegistry.execute(request, output: output) { return value }
+        if let value = try ExperimentalCommandRegistry.configure(request) { return value }
         if request.spec.path.first == "config" { return try configure(request) }
         if request.spec.path.first == "doctor" { return try await doctor(request) }
         if request.spec.path.first == "recovery" { return try await manageRecovery(request, output: output) }
@@ -146,7 +154,7 @@ public enum CLIApplication {
             guard let selected = CompletionShell(rawValue: shell) else {
                 throw CommandLineInvocation.failure(Messages.CLIExperience.invalidArgumentChoice(shell, request.spec.operands[0].values.joined(separator: ", ")).localized, path: request.spec.path)
             }
-            return .object(["shell": .string(shell), "script": .string(RuriCommand.completionScript(for: selected))])
+            return .object(["shell": .string(shell), "script": .string(ExperimentalCommandRegistry.root.completionScript(for: selected))])
         case "app info":
             return .object(["version": .string(BuildConfiguration().version), "schemaVersion": .integer(1), "application": .text(RuriInstallation.application()?.path),
                 "cli": .text(RuriInstallation.cliExecutable?.path), "dataDirectory": .string(basePaths(request).root.path)])

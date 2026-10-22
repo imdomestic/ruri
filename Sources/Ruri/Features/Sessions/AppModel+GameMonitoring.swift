@@ -2,6 +2,7 @@ import RuriLocalization
 import Foundation
 import AppKit
 import RuriCore
+import RuriExtensionKit
 
 extension AppModel {
     func isInstanceInUse(_ id: UUID?) -> Bool {
@@ -257,6 +258,7 @@ extension AppModel {
     }
     func prepareToQuit() async {
         isQuitting = true
+        ExperimentalUIRegistry.stop()
         bootTask?.cancel()
         operation?.cancel()
         await operation?.value

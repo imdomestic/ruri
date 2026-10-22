@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import Observation
 import RuriCore
+import RuriExtensionKit
 import RuriLocalization
 
 enum ServerScope: String, CaseIterable, Identifiable {
@@ -202,7 +203,13 @@ struct ServersView: View {
     @Environment(\.appearsActive) private var appearsActive
     let column: NavigationSplitViewColumn
     @Bindable var navigation: ServerNavigationState
-    private var items: [ServerLibraryItem] { navigation.snapshot?.items ?? [] }
+    /// The library without servers that an enabled extension manages itself.
+    private var filteredLibrary: Result<[ServerLibraryItem], any Error> {
+        Result { try ExperimentalFeatures.visibleServers(navigation.snapshot?.items ?? [], settings: model.state.settings.experimental) }
+    }
+    private var items: [ServerLibraryItem] {
+        switch filteredLibrary { case .success(let items): items; case .failure: [] }
+    }
     private var filtered: [ServerLibraryItem] {
         let history = navigation.snapshot?.history ?? [:]
         return items.filter { item in
@@ -300,6 +307,8 @@ struct ServersView: View {
     /// to set them apart from. Double-clicking a row joins the server.
     private var list: some View {
         List(selection: $navigation.selectedID) {
+            ForEach(ExperimentalUIRegistry.providers, id: \.id) { $0.servers(host: model.experimentalHost) }
+            if case .failure(let error) = filteredLibrary { Text(error.localizedDescription).foregroundStyle(.red) }
             let pinned = navigation.scope == .all ? filtered.filter { $0.preference?.favorite == true } : []
             if pinned.isEmpty || pinned.count == filtered.count {
                 rows(filtered)

@@ -28,17 +28,23 @@ let package = Package(
         .target(name: "RuriSessionKit", dependencies: ["RuriLocalization", "CSQLite", "CZlib"]),
         .target(name: "RuriMonitorRuntime", dependencies: ["RuriSessionKit", "RuriLocalization"]),
         .target(name: "RuriCore", dependencies: ["RuriSessionKit", "ZIPFoundation", "CZlib", "CSQLite", "RuriLocalization", .product(name: "Markdown", package: "swift-markdown"), "TOMLDecoder"], resources: [.copy("Resources/LoaderSupport"), .copy("Resources/mod_data.txt")]),
+        // Extension points; see docs/extensions.md.
+        .target(name: "RuriExtensionKit", dependencies: ["RuriCore"]),
+        .target(name: "RuriFeatureRegistration", dependencies: ["RuriCore", "RuriCommandKit", "RuriExtensionKit"]),
         // Sparkle.framework is embedded in Contents/Frameworks by scripts/build-app.sh.
-        .executableTarget(name: "Ruri", dependencies: ["RuriCore", "RuriLocalization"] + (usesSparkle ? [.product(name: "Sparkle", package: "Sparkle")] : []),
+        .executableTarget(name: "Ruri", dependencies: ["RuriCore", "RuriLocalization", "RuriExtensionKit", "RuriFeatureRegistration"] + (usesSparkle ? [.product(name: "Sparkle", package: "Sparkle")] : []),
                           resources: [.copy("Resources/JavaBrands")],
                           linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]),
         .target(name: "RuriCommandKit", dependencies: ["RuriCore", "RuriLocalization", .product(name: "ArgumentParser", package: "swift-argument-parser")]),
-        .executableTarget(name: "RuriCLI", dependencies: ["RuriCommandKit", "RuriLocalization"]),
+        .executableTarget(name: "RuriCLI", dependencies: ["RuriCommandKit", "RuriLocalization", "RuriFeatureRegistration"]),
         .executableTarget(name: "RuriMonitor", dependencies: ["RuriMonitorRuntime", "RuriLocalization"]),
         .testTarget(name: "RuriMonitorRuntimeTests", dependencies: ["RuriMonitorRuntime", "RuriSessionKit", "RuriLocalization"]),
         .testTarget(name: "RuriSessionKitTests", dependencies: ["RuriSessionKit"]),
         .testTarget(name: "RuriCoreTests", dependencies: ["RuriCore", "RuriMonitorRuntime", "RuriLocalization"]),
         .testTarget(name: "RuriLocalizationTests", dependencies: ["RuriLocalization"]),
-        .testTarget(name: "RuriCLITests", dependencies: ["RuriCommandKit", "RuriCore"])
+        .testTarget(name: "RuriCLITests", dependencies: ["RuriCommandKit", "RuriCore"]),
+        // A sample extension that uses every extension point; it exists only here.
+        .testTarget(name: "RuriExtensionTests", dependencies: ["RuriCore", "RuriCommandKit", "RuriExtensionKit", "RuriFeatureRegistration",
+                                                              .product(name: "ArgumentParser", package: "swift-argument-parser")])
     ]
 )

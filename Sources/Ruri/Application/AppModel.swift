@@ -3,6 +3,7 @@ import SwiftUI
 import Observation
 import AppKit
 import RuriCore
+import RuriExtensionKit
 
 @MainActor @Observable final class AppModel {
     var state: PersistentState
@@ -56,6 +57,7 @@ import RuriCore
     @ObservationIgnored var launchPresentations: [UUID: LaunchPresentation] = [:]
     @ObservationIgnored var automaticallyHiddenSessions: Set<UUID> = []
     @ObservationIgnored var bootTask: Task<Void, Never>?
+    @ObservationIgnored lazy var experimentalHost = makeExperimentalHost()
     var showCLISetup = false
     var showCreate = false
     var showDirectories = false

@@ -91,6 +91,7 @@ import Foundation
             try recorder.setJava(java.label + " · " + java.version)
             try advance(.arguments)
             try await installer.prepareRunDirectory(instance, manifest: manifest)
+            try ExperimentalFeatures.beforeLaunch(paths: paths, instanceID: instanceID, settings: state.settings.experimental)
             let capabilities = await JavaCapabilities.load(for: java, cache: paths.cache)
             let plan = try LaunchBuilder.build(instance: instance, manifest: manifest, java: java, account: account, accessToken: token, paths: paths, destination: target, externalAuth: externalAuth, offlineSkin: offlineSkin, capabilities: capabilities)
             recorder.addSecrets(plan.environmentRedactions + [token])

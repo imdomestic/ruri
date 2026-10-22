@@ -19,11 +19,11 @@ enum CommandHelp {
          (Messages.CLIExperience.sectionContent.localized, ["catalog", "content", "pack", "download"]),
          (Messages.CLIExperience.sectionWorlds.localized, ["world", "datapack", "schematic"]),
          (Messages.CLIExperience.sectionSettings.localized, ["config", "app", "cli", "completions"]),
-         (Messages.CLIExperience.sectionMaintenance.localized, ["doctor", "recovery", "cache", "schema"])]
+         (Messages.CLIExperience.sectionMaintenance.localized, ["doctor", "recovery", "cache", "schema"])] + ExperimentalCommandRegistry.sections
     }
 
     static func commandType(_ path: [String]) -> (any ParsableCommand.Type)? {
-        var type: any ParsableCommand.Type = RuriCommand.self
+        var type: any ParsableCommand.Type = ExperimentalCommandRegistry.root
         for component in path {
             guard let child = type.configuration.subcommands.first(where: { $0.configuration.commandName == component }) else { return nil }
             type = child
@@ -133,7 +133,7 @@ enum CommandHelp {
     private static func index(path: [String], width: Int) -> [String] {
         var lines: [String] = [], previous: String?
         let order = sections.flatMap { $0.commands }
-        let specs = CommandRegistry.commands.filter { $0.path.starts(with: path) }.enumerated().sorted { a, b in
+        let specs = ExperimentalCommandRegistry.commands.filter { $0.path.starts(with: path) }.enumerated().sorted { a, b in
             let (x, y) = (order.firstIndex(of: a.element.path[0]) ?? order.count, order.firstIndex(of: b.element.path[0]) ?? order.count)
             return x == y ? a.offset < b.offset : x < y
         }.map(\.element)
@@ -147,7 +147,7 @@ enum CommandHelp {
     }
 
     private static func complete(path: [String], width: Int) -> [String] {
-        let specs = CommandRegistry.commands.filter { $0.path.starts(with: path) }
+        let specs = ExperimentalCommandRegistry.commands.filter { $0.path.starts(with: path) }
         var lines: [String] = []
         for spec in specs { lines += leaf(spec, width: width) + [""] }
         return lines + notes(for: specs, width: width) + globalOptions(width: width)

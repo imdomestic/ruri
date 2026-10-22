@@ -2,7 +2,7 @@ import Foundation
 import RuriCore
 import RuriLocalization
 
-final class CommandOutput: @unchecked Sendable {
+package final class CommandOutput: @unchecked Sendable {
     enum Format: String, Sendable { case text, json, ndjson }
     private let lock = NSLock()
     private let write: @Sendable (Data, Bool) -> Void

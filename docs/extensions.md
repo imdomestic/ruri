@@ -39,6 +39,10 @@ install("example") { context in
 
 `Tests/RuriExtensionTests/SampleExtension.swift` 是一个完整的示例，覆盖下面列出的全部贡献点和宿主能力。
 
+### 本地化
+
+扩展把自己的 String Catalog 放在 `Sources/<模块>/Localization/Resources/*.xcstrings`，在 `Package.swift` 中以 `.process("Localization/Resources")` 声明为资源。`scripts/localization.py` 与宿主的目录一起校验这些文件，并在 `Sources/<模块>/Localization/Generated` 生成扩展 `Messages` 的访问器；表名不能与宿主或其他扩展重复。扩展在注册时为每张表调用 `LocalizationCatalogRegistry.register(table:definitions:bundle:)`，bundle 取 `LocalizationResources.installedBundle(executable:mainResources:name:)` 找到的 `Ruri_<模块>.bundle`。应用的 `--localization-check` 同时检查已注册的表。不用 Xcode 构建时，用 `scripts/localization.py --compile <bundle>` 为每个模块的 bundle 编译目录。
+
 ### 贡献点
 
 - **启动前**：`beforeLaunch(paths, instanceID, settings)` 在准备好运行目录之后、生成启动命令之前运行，抛出错误会中止启动。
@@ -104,6 +108,10 @@ install("example") { context in
 `Package.swift` declares the extension's targets and dependencies only when the extension is on, and `RuriFeatureRegistration` depends on those targets and defines the build condition. A build without the extension then neither compiles, links nor resolves its dependencies.
 
 `Tests/RuriExtensionTests/SampleExtension.swift` is a complete example that uses every contribution point and host capability listed below.
+
+### Localization
+
+An extension keeps its String Catalogs in `Sources/<Module>/Localization/Resources/*.xcstrings` and declares them in `Package.swift` with `.process("Localization/Resources")`. `scripts/localization.py` checks them together with the host's catalogs and generates `Messages` accessors in `Sources/<Module>/Localization/Generated`; table names must differ from the host's and other extensions'. At registration the extension calls `LocalizationCatalogRegistry.register(table:definitions:bundle:)` for each table, with the `Ruri_<Module>.bundle` that `LocalizationResources.installedBundle(executable:mainResources:name:)` finds. The application's `--localization-check` covers the registered tables as well. Builds without Xcode compile each module's bundle with `scripts/localization.py --compile <bundle>`.
 
 ### Contribution points
 

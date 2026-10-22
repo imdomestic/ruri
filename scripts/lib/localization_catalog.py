@@ -140,7 +140,8 @@ def read_catalogs(root, check_format=False, format_files=False):
     resources = root / 'Sources/RuriLocalization/Resources'
     catalogs = {}
     keys = set()
-    paths = sorted(resources.glob('*.xcstrings'))
+    # Extension modules keep their own catalogs in Sources/<Module>/Localization/Resources.
+    paths = sorted([*resources.glob('*.xcstrings'), *root.glob('Sources/*/Localization/Resources/*.xcstrings')])
     if not paths:
         raise ValueError('No String Catalogs found')
     for path in paths:
@@ -180,7 +181,8 @@ def read_catalogs(root, check_format=False, format_files=False):
                 raise ValueError(f'{identity}: {error}') from error
             catalogs[identity] = {'table': path.stem, 'key': key, 'group': group, 'name': name,
                                   'value': value, 'kinds': [expected[i + 1] for i in range(len(expected))],
-                                  'plurals': plurals, 'entry': entry}
+                                  'plurals': plurals, 'entry': entry, 'module': path.relative_to(root / 'Sources').parts[0],
+                                  'output': resources.parent / 'Generated' if path.parent == resources else path.parent.parent / 'Generated'}
     return catalogs
 
 
@@ -207,10 +209,15 @@ def compile_catalogs(root, bundle):
     """Replace the String Catalogs SwiftPM copies into a bundle without Xcode with compiled tables."""
     tables = {}
     for item in read_catalogs(root).values():
+        # SwiftPM names each module's resource bundle Ruri_<Module>.bundle.
+        if bundle.name != 'Ruri_' + item['module'] + '.bundle':
+            continue
         for language, node in item['entry']['localizations'].items():
             entry = compiled_entry(node)
             kind = 'stringsdict' if isinstance(entry, dict) else 'strings'
             tables.setdefault((language, item['table'], kind), {})[item['key']] = entry
+    if not tables:
+        raise ValueError('No String Catalogs for bundle: ' + str(bundle))
     for (language, table, kind), entries in tables.items():
         path = bundle / f'{language}.lproj/{table}.{kind}'
         path.parent.mkdir(parents=True, exist_ok=True)

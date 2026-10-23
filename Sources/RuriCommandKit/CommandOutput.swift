@@ -60,6 +60,19 @@ package final class CommandOutput: @unchecked Sendable {
             }
         }
     }
+    /// 等待用户操作的提示始终可见，JSON 的最终结果继续独占 stdout。
+    package func interaction(_ type: String, _ value: Value) {
+        withOutputContext {
+            guard !finished else { return }
+            let type = redactor.redact(type), value = clean(value)
+            if format == .ndjson {
+                emit(.object(["schemaVersion": .integer(1), "type": .string(type), "data": value]))
+            } else {
+                clearProgress()
+                write(Data((renderer(terminal.error).event(type, value) + "\n").utf8), true)
+            }
+        }
+    }
     public func progress(_ progress: InstallProgress) { event("progress", .object(["stage": .string(progress.stage), "completed": .integer(progress.completed), "total": .integer(progress.total)])) }
     public func result(_ data: Value = .null, error: OperationFailure? = nil, warnings: [String] = []) {
         withOutputContext {

@@ -64,6 +64,7 @@ install("example") { context in
 - 实例、Modrinth 包与文件：`ExperimentalInstanceCapabilities`（读取实例、设置 Java 版本、准备与安装 `.mrpack`、排除由扩展管理的文件、校验文件、Quick Play 参数）。
 - 启动与会话：`host.beginLaunch`、`host.start`、`host.session`、`host.sessions`，或 `ExperimentalLaunchCapabilities`。
 - 应用的提示：`host.report(_:)`、`host.reload()`、`host.readOnly`、`host.busy`。
+- 命令行交互提示：`output.interaction(type, value)` 在文本与 JSON 模式下写入 stderr，在 NDJSON 模式下输出结构化事件；`--quiet` 保留这些完成操作所需的提示，所有内容经过凭据清理。
 
 扩展拿不到：
 
@@ -134,6 +135,7 @@ An extension can use:
 - Instances, Modrinth packs and files: `ExperimentalInstanceCapabilities` (reading instances, setting the Java version, preparing and installing `.mrpack` files, leaving out files the extension manages, verifying files, Quick Play arguments).
 - Launches and sessions: `host.beginLaunch`, `host.start`, `host.session`, `host.sessions`, or `ExperimentalLaunchCapabilities`.
 - The application's feedback: `host.report(_:)`, `host.reload()`, `host.readOnly`, `host.busy`.
+- Required command-line interaction: `output.interaction(type, value)` writes to stderr in text and JSON modes and emits a structured event in NDJSON mode. These prompts remain visible with `--quiet`, and all content passes through secret redaction.
 
 An extension cannot reach:
 

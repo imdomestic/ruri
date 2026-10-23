@@ -69,8 +69,7 @@ public enum CredentialStore {
         return data
     }
     private static func removeData(for id: UUID, service: String) throws {
-        let status = SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: id.uuidString] as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw failure(status) }
+        try KeychainItemDeletion.remove(service: service, account: id.uuidString)
     }
     private static func failure(_ status: OSStatus) -> RuriError { .message(Messages.CoreAuthentication.keychainAccessFailed(String(describing: status))) }
 }

@@ -15,6 +15,7 @@
       packages = forEachSystem (system: {
         default = packageFor system;
         ruri-launcher = packageFor system;
+        ruri-without-experiments = (packageFor system).override { enableVex = false; };
       });
 
       apps = forEachSystem (
@@ -75,6 +76,7 @@
 
       checks = forEachSystem (system: {
         package = packageFor system;
+        without-experiments = (packageFor system).override { enableVex = false; };
       });
 
       formatter = forEachSystem (system: (pkgsFor system).nixfmt-tree);

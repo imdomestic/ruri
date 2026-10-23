@@ -36,11 +36,18 @@ for argument in "$@"; do
   esac
 done
 
-build_args=()
+# 保留全部组件的锁定版本；切换组件时不改写 Package.resolved。
+build_args=(--force-resolved-versions)
 # Building every architecture with one compiler keeps an older toolchain's bugs
 # out of a single slice. Each architecture builds in its own folder, because the
 # products path does not name the architecture.
 scratch_path="${RURI_BUILD_DIR:-.build}"
+# 各组件组合使用独立产物目录，打包时只读取当前组合的资源。
+if [[ "${RURI_ENABLE_VEX:-1}" == 0 ]]; then
+  scratch_path="$scratch_path/without-vex"
+else
+  scratch_path="$scratch_path/with-vex"
+fi
 if [[ -n "${RURI_ARCH:-}" ]]; then
   case "$RURI_ARCH" in
     arm64|x86_64) ;;

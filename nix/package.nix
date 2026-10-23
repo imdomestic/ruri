@@ -11,14 +11,14 @@
   rcodesign,
   sqlite,
   zlib,
+  enableVex ? true,
 }:
 let
   infoPlist = builtins.readFile ../Resources/Info.plist;
 
-  # Nix replaces Sparkle's in-app updater (see RURI_DISABLE_SPARKLE below), so
-  # its pin is neither fetched nor resolved.
-  removeSparklePin = ''
-    jq 'del(.pins[] | select(.identity == "sparkle"))' Package.resolved > Package.resolved.new
+  # 构建副本只保留当前组件需要的依赖。
+  filterPins = ''
+    jq 'del(.pins[] | select(.identity == "sparkle"${lib.optionalString (!enableVex) '' or .identity == "eventsource"''}))' Package.resolved > Package.resolved.new
     mv Package.resolved.new Package.resolved
   '';
 in
@@ -39,12 +39,12 @@ stdenv.mkDerivation (finalAttrs: {
     ];
   };
 
-  postPatch = removeSparklePin;
+  postPatch = filterPins;
 
   swiftpmDeps = fetchSwiftPMDeps {
     inherit (finalAttrs) pname version src;
-    postPatch = removeSparklePin;
-    hash = "sha256-EFRLefyZyq/VBUoe5cOeiDlc5+NsqTxTE2fp8KovsDw=";
+    postPatch = filterPins;
+    hash = if enableVex then "sha256-hW1978A1IxHeQPTRvZZxs8VSjKqCqyAfSux5cdPU3zo=" else "sha256-yU+kfA41lBm5m2Fy4vydLAf8YEFqqenFeEq3s+27BVU=";
   };
 
   strictDeps = true;
@@ -66,6 +66,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   env = {
     RURI_DISABLE_SPARKLE = "1";
+    RURI_ENABLE_VEX = if enableVex then "1" else "0";
     # The package puts `ruri` on PATH, so the app does not offer its own link.
     RURI_PACKAGE_MANAGER = "Nix";
     # The release CurseForge key is not public; users can add their own in Settings.
@@ -105,6 +106,8 @@ stdenv.mkDerivation (finalAttrs: {
     cp -R "$binPath"/*.bundle "$app/Contents/Resources/"
     # Xcode compiles the String Catalogs that SwiftPM copies as-is.
     python3 scripts/localization.py --compile "$app/Contents/Resources/Ruri_RuriLocalization.bundle"
+    ${lib.optionalString enableVex ''python3 scripts/localization.py --compile "$app/Contents/Resources/Ruri_RuriVex.bundle"''}
+    ${lib.optionalString enableVex ''python3 scripts/localization.py --compile "$app/Contents/Resources/Ruri_RuriVexCLI.bundle"''}
 
     host="$app/Contents/Helpers/RuriGame.app"
     install -Dm644 Resources/GameHost-Info.plist "$host/Contents/Info.plist"

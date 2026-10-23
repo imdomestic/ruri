@@ -7,7 +7,6 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/lib/app.py"
@@ -25,8 +24,7 @@ class ConfigureAppTests(unittest.TestCase):
 
     def configure(self, environment):
         self.path.write_bytes(self.source)
-        with patch.dict(os.environ, environment, clear=True):
-            app.configure_metadata(self.path)
+        app.configure_metadata(self.path, environment)
         return plistlib.loads(self.path.read_bytes())
 
     def test_local_and_ci_builds_keep_builtin_login_without_override(self):
@@ -54,6 +52,32 @@ class ConfigureAppTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.configure({"RURI_MICROSOFT_CLIENT_ID": "not-a-client-id"})
         self.assertEqual(self.path.read_bytes(), self.source)
+
+
+class ConfigureComponentsTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.path = Path(temporary.name) / "Info.plist"
+        self.source = (ROOT / "Resources/Info.plist").read_bytes()
+        self.path.write_bytes(self.source)
+
+    def test_disabled_component_preserves_upstream_metadata_bytes(self):
+        app.configure_components(self.path, {"RURI_ENABLE_VEX": "0"})
+        self.assertEqual(self.path.read_bytes(), self.source)
+
+    def test_enabled_component_registers_preview_links(self):
+        for environment in ({}, {"RURI_ENABLE_VEX": "1"}):
+            with self.subTest(environment=environment):
+                app.configure_components(self.path, environment)
+                info = plistlib.loads(self.path.read_bytes())
+                self.assertEqual(info["CFBundleURLTypes"], [{
+                    "CFBundleURLName": "dev.ruri.launcher.vex",
+                    "CFBundleURLSchemes": ["ruri"],
+                    "CFBundleTypeRole": "Viewer",
+                }])
+                del info["CFBundleURLTypes"]
+                self.assertEqual(info, plistlib.loads(self.source))
 
 
 class ConfigureUpdatesTests(unittest.TestCase):

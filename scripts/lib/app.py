@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-"""Configure distribution metadata and bundled service credentials before signing."""
 import argparse
 import hashlib
 import os
@@ -9,31 +7,29 @@ import re
 import sys
 import uuid
 sys.dont_write_bytecode = True
-try:
-    from .localization import shipping_languages
-except ImportError:
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from lib.localization import shipping_languages
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib.localization import shipping_languages
 
 ROOT = Path(__file__).resolve().parents[2]
 KEY_VARIABLE = "RURI_CURSEFORGE_API_KEY"
 
 
-def configure_metadata(path: Path) -> None:
+def configure_metadata(path: Path, environment=None) -> None:
+    environment = os.environ if environment is None else environment
     with path.open("rb") as source:
         info = plistlib.load(source)
     info["CFBundleDevelopmentRegion"] = "zh-Hans"
     info["CFBundleLocalizations"] = shipping_languages(ROOT)
-    version = os.environ.get("RURI_VERSION") or info.get("RuriVersion") or info["CFBundleShortVersionString"]
+    version = environment.get("RURI_VERSION") or info.get("RuriVersion") or info["CFBundleShortVersionString"]
     number = r"(?:0|[1-9][0-9]*)"
     identifier = r"(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
     match = re.fullmatch(rf"({number}\.{number}\.{number})(?:-{identifier}(?:\.{identifier})*)?", version)
     if not match:
         raise ValueError("RURI_VERSION must be X.Y.Z or X.Y.Z-prerelease (without a v prefix).")
-    build_number = os.environ.get("RURI_BUILD_NUMBER") or info["CFBundleVersion"]
+    build_number = environment.get("RURI_BUILD_NUMBER") or info["CFBundleVersion"]
     if not re.fullmatch(r"[1-9][0-9]*", build_number):
         raise ValueError("RURI_BUILD_NUMBER must be a positive integer.")
-    client_id = os.environ.get("RURI_MICROSOFT_CLIENT_ID", "").strip() or info.get("RuriMicrosoftClientID", "").strip()
+    client_id = environment.get("RURI_MICROSOFT_CLIENT_ID", "").strip() or info.get("RuriMicrosoftClientID", "").strip()
     if client_id:
         # Canonical UUIDs only; a client ID is public, not a client secret.
         if str(uuid.UUID(client_id)) != client_id.lower():
@@ -43,7 +39,7 @@ def configure_metadata(path: Path) -> None:
         info.pop("RuriMicrosoftClientID", None)
     # Package managers that put ruri on PATH themselves, such as Nix, name
     # themselves so the app and CLI do not offer their own command-line link.
-    package_manager = os.environ.get("RURI_PACKAGE_MANAGER", "").strip()
+    package_manager = environment.get("RURI_PACKAGE_MANAGER", "").strip()
     if package_manager:
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 .+-]{0,31}", package_manager):
             raise ValueError("RURI_PACKAGE_MANAGER must be a short name such as Nix.")
@@ -53,6 +49,21 @@ def configure_metadata(path: Path) -> None:
     info["CFBundleShortVersionString"] = match[1]
     info["CFBundleVersion"] = build_number
     info["RuriVersion"] = version
+    with path.open("wb") as destination:
+        plistlib.dump(info, destination, sort_keys=False)
+
+
+def configure_components(path: Path, environment=None) -> None:
+    environment = os.environ if environment is None else environment
+    if environment.get("RURI_ENABLE_VEX") == "0":
+        return
+    with path.open("rb") as source:
+        info = plistlib.load(source)
+    info["CFBundleURLTypes"] = [{
+        "CFBundleURLName": "dev.ruri.launcher.vex",
+        "CFBundleURLSchemes": ["ruri"],
+        "CFBundleTypeRole": "Viewer",
+    }]
     with path.open("wb") as destination:
         plistlib.dump(info, destination, sort_keys=False)
 
@@ -96,7 +107,7 @@ def configure_services(resources: Path, environment=None, root: Path = ROOT) -> 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description="Configure application metadata and bundled services before signing.")
     parser.add_argument("action", choices=["metadata", "bundle"])
     parser.add_argument("path", type=Path)
     args = parser.parse_args()
@@ -106,6 +117,7 @@ if __name__ == "__main__":
         else:
             configure_metadata(args.path / "Contents/Info.plist")
             configure_updates(args.path / "Contents/Info.plist")
+            configure_components(args.path / "Contents/Info.plist")
             configure_services(args.path / "Contents/Resources")
     except (ValueError, OSError) as error:
         # Service credentials must never be included in command output.

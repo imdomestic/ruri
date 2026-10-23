@@ -52,9 +52,9 @@ def sign(app, dmg):
     info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
     if info.get("RuriVersion") != match[1]:
         raise UpdateError(f"{dmg.name} does not match the built app version {info.get('RuriVersion')}.")
-    # scripts/swift-build.sh keeps release builds in this subfolder of RURI_BUILD_DIR,
-    # under a per-architecture folder when RURI_ARCH selects one.
-    build_dir = Path(os.environ.get("RURI_BUILD_DIR", ".build")) / os.environ.get("RURI_ARCH", "") / "release-scratch"
+    # 与 scripts/swift-build.sh 使用相同的组件、架构和配置目录。
+    component = "without-vex" if os.environ.get("RURI_ENABLE_VEX") == "0" else "with-vex"
+    build_dir = Path(os.environ.get("RURI_BUILD_DIR", ".build")) / component / os.environ.get("RURI_ARCH", "") / "release-scratch"
     tool = (build_dir if build_dir.is_absolute() else ROOT / build_dir) / "artifacts/sparkle/Sparkle/bin/sign_update"
     if not tool.is_file():
         raise UpdateError(f"Sparkle sign_update was not found at {tool}.")

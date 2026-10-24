@@ -37,6 +37,8 @@ Vex 设置通过宿主上下文保存。关闭组件的应用保存其他设置�
 
 CLI 的 `help vex`、`schema vex --full` 和补全使用相同的命令声明。GitHub 登录的必要交互提示在文本与 JSON 模式下写入 stderr，NDJSON 模式输出结构化事件；`--quiet` 仍显示完成认证所需的提示。
 
+Vex 登录、添加服务器与预览表单允许通过应用菜单退出。退出、禁用组件或关闭所属表单会取消认证操作，取消后的任务不能保存凭据、设置或更新后续表单。macOS 15.4 起使用 SwiftUI 的 `presentationPreventsAppTermination(false)`；macOS 14 至 15.3 通过局部 AppKit 视图绑定所属窗口，最后一个绑定移除时恢复窗口原值。预览中的内层登录表单与外层预览分别设置各自窗口。
+
 ### CLI 预览与准备
 
 `--dry-run` 预览命令不更改用户数据。需要认证的预览优先读取当前 Keychain 会话，缺少当前条目时读取旧条目；读取过程不写入、删除或缓存会话。schema 的 `sideEffects` 描述正式执行可能产生的副作用，预览按下表执行。
@@ -75,6 +77,8 @@ Enable the extension with `ruri config set experimental.vex.enabled true --scope
 Sessions use Keychain service `dev.ruri.launcher.ext.vex`, with the canonical server URL as the account. The host trusts both the app and bundled CLI and grants Delete authorization. Normal commands migrate a session from legacy service `dev.ruri.launcher.vex.api` by reading the old item, writing the new one, then deleting the old item. An existing current item takes precedence, and any legacy item for that server is removed. Authenticated queries can also perform this migration, so their schema includes `credentials` in `sideEffects`.
 
 Help, schemas and completion share the command declarations. Required login interaction is written to stderr for text and JSON output, and emitted as structured events for NDJSON. These prompts remain visible with `--quiet`.
+
+Vex login, server addition and preview sheets allow quitting from the application menu. Quitting, disabling the component or closing the owning form cancels authentication; cancelled tasks cannot save credentials or settings or update a subsequent form. macOS 15.4 and later use SwiftUI's `presentationPreventsAppTermination(false)`. On macOS 14 through 15.3, a local AppKit view binds the containing window and restores its original value when the last binding is removed. A preview's nested login sheet and its outer preview configure their own windows independently.
 
 ### CLI previews and preparation
 

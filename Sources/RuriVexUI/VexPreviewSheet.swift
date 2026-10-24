@@ -38,6 +38,7 @@ struct VexPreviewSheet: View {
                 }
             }
         }.padding(24).frame(width: 480)
+        .vexAllowsAppTermination()
         .sheet(item: $login) { server in VexLoginForm(server: server) { login = nil } }
         .onDisappear { cancel() }
         .onChange(of: host.vexEnabled) {

@@ -119,6 +119,7 @@ private struct VexAddServerSheet: View {
                 Button(Messages.Servers.add.localized) { add() }.disabled(address.isEmpty || busy)
             }
         }.padding(24).frame(width: 480)
+        .vexAllowsAppTermination()
         .onDisappear { cancelAuthentication() }
         .onChange(of: host.vexEnabled) {
             if !host.vexEnabled { cancelAuthentication(); dismiss() }
@@ -192,6 +193,7 @@ struct VexLoginForm: View {
             if busy || meta == nil && error == nil { ProgressView().controlSize(.small) }
             Button(Messages.Common.cancel.localized) { cancelAuthentication(); dismiss() }
         }.padding(24).frame(width: 480)
+        .vexAllowsAppTermination()
         .task {
             authenticate { id in
                 let meta = try await VexClient(baseURL: VexTransport.requireHTTPS(VexSettings.normalizedURL(server.baseURL))).meta()

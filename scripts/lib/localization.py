@@ -19,7 +19,8 @@ BRANDS = {'Ruri', 'Minecraft', 'Java', 'Microsoft', 'Modrinth', 'CurseForge', 'F
 
 def candidates(root):
     for path in sorted((root / 'Sources').rglob('*.swift')):
-        if 'RuriLocalization' in path.parts:
+        # Message accessors generated for extension modules hold catalog text too.
+        if 'RuriLocalization' in path.parts or path.parent.name == 'Generated' and path.parent.parent.name == 'Localization':
             continue
         source = path.read_text()
         scanner = Scanner(source)

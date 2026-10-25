@@ -24,7 +24,7 @@ public enum LocalizationCommandLine {
     /// It executes before loading launcher state, accounts or game services.
     public static func resourceCheck(arguments: [String] = Array(CommandLine.arguments.dropFirst())) -> Int32? {
         guard arguments == ["--localization-check"] else { return nil }
-        guard let bundle = LocalizationResources.bundle,
+        guard LocalizationCatalogRegistry.resourcesAvailable(), let bundle = LocalizationResources.bundle,
               let name = bundle.localizations.first(where: { $0.caseInsensitiveCompare(LocalizationContext.baseLanguage) == .orderedSame }),
               let path = bundle.path(forResource: name, ofType: "lproj"), let localized = Bundle(path: path),
               localized.localizedString(forKey: "Common.localizationCheck", value: "MISSING", table: "Common") != "MISSING" else { return 2 }

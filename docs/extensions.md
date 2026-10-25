@@ -35,6 +35,10 @@ install("example") { context in
 
 `Tests/RuriExtensionTests/SampleExtension.swift` implements the contribution interfaces. The tests exercise command discovery, configuration, target resolution, core hooks, UI registration and lifecycle, secure storage, and import exclusions.
 
+### Localization
+
+An extension keeps its String Catalogs in `Sources/<Module>/Localization/Resources/*.xcstrings` and declares them in `Package.swift` with `.process("Localization/Resources")`. `scripts/localization.py` checks them together with the host's catalogs and generates `Messages` accessors in `Sources/<Module>/Localization/Generated`; table names must differ from the host's and other extensions'. At registration the extension calls `LocalizationCatalogRegistry.register(table:definitions:bundle:)` for each table, with the `Ruri_<Module>.bundle` that `LocalizationResources.installedBundle(executable:mainResources:name:)` finds. The application's `--localization-check` covers the registered tables as well. Builds without Xcode compile each module's bundle with `scripts/localization.py --compile <bundle>`.
+
 ### Contribution points
 
 - **Before launch**: `beforeLaunch(paths, instanceID, settings)` runs after the run directory is prepared and before the launch command is built. An error stops the launch.
@@ -63,4 +67,4 @@ The context and UI host expose:
 - Account availability and account presentation, without passing Microsoft credentials.
 - Application capabilities through `ExperimentalHost`, with `AppModel` remaining internal to the application.
 
-Core hooks and command execution are gated by the enabled setting. UI providers keep only their settings switch visible while disabled. Extensions are trusted code compiled into the application; these interfaces define an integration boundary, not a security sandbox.
+Core hooks and command execution are gated by the enabled setting. UI providers keep only their settings switch visible while disabled. These interfaces define how trusted extensions compiled into the application integrate with the host.

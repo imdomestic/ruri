@@ -60,6 +60,7 @@ An extension can use:
 - Instances, Modrinth packs and files: `ExperimentalInstanceCapabilities` (reading instances, setting the Java version, preparing and installing `.mrpack` files, leaving out files the extension manages, verifying files, Quick Play arguments).
 - Launches and sessions: `host.beginLaunch`, `host.start`, `host.session`, `host.sessions`, or `ExperimentalLaunchCapabilities`.
 - The application's feedback: `host.report(_:)`, `host.reload()`, `host.readOnly`, `host.busy`.
+- Required command-line interaction: `output.interaction(type, value)` writes to stderr in text and JSON modes and emits a structured event in NDJSON mode. These prompts remain visible with `--quiet`, and all content passes through secret redaction.
 
 The context and UI host expose:
 

@@ -41,20 +41,7 @@ public struct ExperimentalSecureStorage: @unchecked Sendable {
 
     /// Removes the item; a missing item counts as removed.
     public func remove(_ account: String) throws {
-        var request = query(account)
-        request[kSecReturnRef as String] = true
-        request[kSecMatchLimit as String] = kSecMatchLimitAll
-        var result: CFTypeRef?
-        let found = SecItemCopyMatching(request as CFDictionary, &result)
-        if found == errSecItemNotFound { return }
-        guard found == errSecSuccess else { throw Self.failure(found) }
-        // Deleting by reference removes exactly the matched item, even when the
-        // default search list holds more than one keychain.
-        guard let items = result as? [SecKeychainItem], items.count == 1 else { throw Self.failure(errSecDuplicateItem) }
-        var delete: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecMatchItemList as String: items]
-        if let keychain { delete[kSecMatchSearchList as String] = [keychain] }
-        let status = SecItemDelete(delete as CFDictionary)
-        guard status == errSecSuccess else { throw Self.failure(status) }
+        try KeychainItemDeletion.remove(service: service, account: account, keychains: keychain.map { [$0] })
     }
 
     /// Account names of this extension's items.

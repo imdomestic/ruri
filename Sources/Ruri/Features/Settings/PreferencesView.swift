@@ -2,6 +2,7 @@ import RuriLocalization
 import SwiftUI
 import AppKit
 import RuriCore
+import RuriExtensionKit
 
 struct PreferencesView: View {
     @Environment(AppModel.self) private var model
@@ -18,6 +19,7 @@ struct PreferencesView: View {
             newInstances
             network
             CLISettingsSection()
+            ForEach(ExperimentalUIRegistry.providers, id: \.id) { $0.settings(host: model.experimentalHost) }
             if updater.isAvailable { softwareUpdate }
             dataAndAbout
         }

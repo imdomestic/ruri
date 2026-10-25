@@ -166,7 +166,7 @@ public actor InstanceTransfer {
     static let excluded: Set<String> = [".ruri", "logs", "crash-reports", "assets", "libraries", "versions", "natives", "webcache", "launcher_accounts.json", "launcher_profiles.json", "usercache.json", "usernamecache.json", "launcher_msa_credentials.bin", ".fabric", ".quilt", ".mixin.out", ".optifine", "downloads", "server-resource-packs", "mods/.connector", "CustomSkinLoader/caches", "local/crash_assistant"]
     public init(paths: LauncherPaths) { self.paths = paths }
 
-    public func prepare(_ source: URL, origin: ModpackOrigin? = nil, progress: @Sendable (InstallProgress) -> Void = { _ in }) throws -> PreparedInstanceImport {
+    public func prepare(_ source: URL, origin: ModpackOrigin? = nil, excludingFiles: Set<String> = [], progress: @Sendable (InstallProgress) -> Void = { _ in }) throws -> PreparedInstanceImport {
         try paths.prepare()
         let workspace = paths.cache.appendingPathComponent("transfer-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: workspace, withIntermediateDirectories: true)
@@ -182,6 +182,9 @@ public actor InstanceTransfer {
             }
             let root = try Self.findRoot(unpacked)
             var description = try Self.describe(root)
+            for path in excludingFiles { _ = try LauncherPaths.safePath(path, within: description.game) }
+            description.excluded.formUnion(excludingFiles)
+            description.packFiles.removeAll { excludingFiles.contains($0.path) }
             if let origin { description.modpack?.origin = origin }
             let locks = try Self.lockWorlds(description.game); defer { locks.forEach { close($0) } }
             let snapshot = workspace.appendingPathComponent("minecraft")

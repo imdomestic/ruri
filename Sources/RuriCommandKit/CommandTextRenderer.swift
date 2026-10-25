@@ -15,7 +15,7 @@ struct CommandTextRenderer {
     var style: TextStyle { layout.style }
 
     func result(_ value: Value) -> String {
-        if let presenter = Self.presenter(path) { return presenter.render(self, value).joined(separator: "\n") }
+        if let presenter = Self.presenter(path) ?? ExperimentalCommandRegistry.presenter(path) { return presenter.render(self, value).joined(separator: "\n") }
         // Without a known command, the shape of the value decides.
         if value["before"]["effective"] != .null, value["after"]["effective"] != .null { return configurationChange(value).joined(separator: "\n") }
         if value["scope"] != .null, value.object?["effective"] != nil { return configuration(value).joined(separator: "\n") }

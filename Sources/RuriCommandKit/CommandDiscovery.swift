@@ -4,7 +4,7 @@ import RuriLocalization
 
 enum CommandDiscovery {
     static func schema(_ request: CommandRequest) throws -> Value {
-        let matches = CommandRegistry.commands.filter { $0.path.starts(with: request.operands) }
+        let matches = ExperimentalCommandRegistry.commands.filter { $0.path.starts(with: request.operands) }
         guard !matches.isEmpty else { throw OperationFailure("NOT_FOUND", Messages.CLIInterface.unknownCommandPath.localized) }
         let exact = matches.first { $0.path == request.operands }
         let input = request.flag("input"), output = request.flag("output-schema"), scope = request.string("scope")

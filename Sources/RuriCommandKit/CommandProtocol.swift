@@ -5,14 +5,15 @@ import RuriCore
 
 public typealias Value = OperationValue
 
-struct CommonOptions: ParsableArguments {
-    @Flag(help: ArgumentHelp(Messages.CLIInterface.jsonOutputHelp.localized)) var json = false
-    @Option(help: ArgumentHelp(Messages.CLIInterface.outputFormatHelp.localized), completion: .list(["text", "json", "ndjson"])) var output: String = "text"
-    @Option(help: ArgumentHelp(Messages.CLIInterface.dataDirectoryHelp.localized), completion: .directory) var dataDir: String?
-    @Option(help: ArgumentHelp(Messages.CLIInterface.messageLanguageHelp.localized), completion: .list(LocalizationContext.commandLineLanguages)) var language: String?
-    @Flag(help: ArgumentHelp(Messages.CLIInterface.quietProgressHelp.localized)) var quiet = false
-    @Flag(help: ArgumentHelp(Messages.CLIExperience.detailsHelp.localized)) var details = false
-    @Option(help: ArgumentHelp(Messages.CLIExperience.colorHelp.localized), completion: .list(Self.colorModes)) var color: String = "auto"
+package struct CommonOptions: ParsableArguments {
+    @Flag(help: ArgumentHelp(Messages.CLIInterface.jsonOutputHelp.localized)) package var json = false
+    @Option(help: ArgumentHelp(Messages.CLIInterface.outputFormatHelp.localized), completion: .list(["text", "json", "ndjson"])) package var output: String = "text"
+    @Option(help: ArgumentHelp(Messages.CLIInterface.dataDirectoryHelp.localized), completion: .directory) package var dataDir: String?
+    @Option(help: ArgumentHelp(Messages.CLIInterface.messageLanguageHelp.localized), completion: .list(LocalizationContext.commandLineLanguages)) package var language: String?
+    @Flag(help: ArgumentHelp(Messages.CLIInterface.quietProgressHelp.localized)) package var quiet = false
+    @Flag(help: ArgumentHelp(Messages.CLIExperience.detailsHelp.localized)) package var details = false
+    @Option(help: ArgumentHelp(Messages.CLIExperience.colorHelp.localized), completion: .list(Self.colorModes)) package var color: String = "auto"
+    package init() {}
 
     /// Options every command accepts, before, between or after command names.
     static let flags: Set<String> = ["--json", "--quiet", "--details", "--help", "-h", "--help-hidden"]
@@ -26,7 +27,7 @@ struct CommonOptions: ParsableArguments {
 
 /// What a parameter refers to. Help, target resolution and completion all read
 /// the role, so they cannot disagree about a parameter.
-enum ParameterRole: Sendable, Equatable {
+package enum ParameterRole: Sendable, Equatable {
     case text
     case instance, directory, account
     /// A session within the instance named by the command's instance operand.
@@ -45,16 +46,21 @@ enum ParameterRole: Sendable, Equatable {
     case commandPath
 }
 
-struct ParameterSpec: Encodable, Sendable {
-    let name: String
-    let type: String
-    let required: Bool
-    let help: String
-    var values: [String] = []
-    var role: ParameterRole = .text
-    var defaultValue: String? = nil
-    var minimum: Int? = nil
-    var maximum: Int? = nil
+package struct ParameterSpec: Encodable, Sendable {
+    package let name: String
+    package let type: String
+    package let required: Bool
+    package let help: String
+    package var values: [String] = []
+    package var role: ParameterRole = .text
+    package var defaultValue: String? = nil
+    package var minimum: Int? = nil
+    package var maximum: Int? = nil
+    package init(name: String, type: String, required: Bool, help: String, values: [String] = [], role: ParameterRole = .text,
+                 defaultValue: String? = nil, minimum: Int? = nil, maximum: Int? = nil) {
+        self.name = name; self.type = type; self.required = required; self.help = help; self.values = values; self.role = role
+        self.defaultValue = defaultValue; self.minimum = minimum; self.maximum = maximum
+    }
     // Presentation metadata stays out of the published descriptor.
     enum CodingKeys: String, CodingKey { case name, type, required, help, values }
     /// The value name shown in usage, such as `--directory <directory>`.
@@ -70,19 +76,24 @@ struct ParameterSpec: Encodable, Sendable {
     var isTarget: Bool { [.instance, .directory, .account, .session, .scope, .preferredInstance, .recoveryTarget].contains(role) }
 }
 
-struct CommandSpec: Encodable, Sendable {
-    let path: [String]
-    let summary: String
-    var operands: [ParameterSpec] = []
-    var options: [ParameterSpec] = []
-    var mutation = false
-    var confirmation = false
-    var userParticipation = false
-    var examples: [String] = []
+package struct CommandSpec: Encodable, Sendable {
+    package let path: [String]
+    package let summary: String
+    package var operands: [ParameterSpec] = []
+    package var options: [ParameterSpec] = []
+    package var mutation = false
+    package var confirmation = false
+    package var userParticipation = false
+    package var examples: [String] = []
+    package init(path: [String], summary: String, operands: [ParameterSpec] = [], options: [ParameterSpec] = [],
+                 mutation: Bool = false, confirmation: Bool = false, userParticipation: Bool = false, examples: [String] = []) {
+        self.path = path; self.summary = summary; self.operands = operands; self.options = options
+        self.mutation = mutation; self.confirmation = confirmation; self.userParticipation = userParticipation; self.examples = examples
+    }
     var supportsDryRun: Bool { options.contains { $0.name == "dry-run" } }
     var configuration: CommandConfiguration { .init(commandName: path.last!, abstract: summary) }
     enum CodingKeys: String, CodingKey { case path, summary, operands, options, mutation, confirmation, userParticipation, examples, supportsDryRun, inputSchema, resultSchema, sideEffects }
-    func encode(to encoder: Encoder) throws {
+    package func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(path, forKey: .path); try c.encode(summary, forKey: .summary)
         try c.encode(operands, forKey: .operands); try c.encode(options, forKey: .options)
@@ -95,14 +106,14 @@ struct CommandSpec: Encodable, Sendable {
     }
 }
 
-protocol ExecutableCommand: ParsableCommand {
+package protocol ExecutableCommand: ParsableCommand {
     static var spec: CommandSpec { get }
     var common: CommonOptions { get }
     var operands: [String] { get }
     var parameters: [String: Value] { get }
 }
 
-extension ExecutableCommand {
+package extension ExecutableCommand {
     static var configuration: CommandConfiguration { spec.configuration }
     var request: CommandRequest { .init(spec: Self.spec, common: common, operands: operands, options: parameters) }
     static func help(operand index: Int) -> ArgumentHelp {
@@ -113,21 +124,21 @@ extension ExecutableCommand {
     static func completion(option name: String) -> CompletionKind? { CommandCompletion.kind(for: .option(name), in: spec) }
 }
 
-struct CommandRequest: Sendable {
-    let spec: CommandSpec
-    let common: CommonOptions
-    let operands: [String]
-    let options: [String: Value]
-    var path: String { spec.path.joined(separator: " ") }
-    var dryRun: Bool { flag("dry-run") }
-    func flag(_ name: String) -> Bool { options[name]?.bool ?? false }
-    func string(_ name: String) -> String? { options[name]?.string }
-    func integer(_ name: String) -> Int? { options[name]?.int }
-    func required(_ name: String) throws -> String {
+package struct CommandRequest: Sendable {
+    package let spec: CommandSpec
+    package let common: CommonOptions
+    package let operands: [String]
+    package let options: [String: Value]
+    package var path: String { spec.path.joined(separator: " ") }
+    package var dryRun: Bool { flag("dry-run") }
+    package func flag(_ name: String) -> Bool { options[name]?.bool ?? false }
+    package func string(_ name: String) -> String? { options[name]?.string }
+    package func integer(_ name: String) -> Int? { options[name]?.int }
+    package func required(_ name: String) throws -> String {
         guard let value = string(name), !value.isEmpty else { throw OperationFailure("INVALID_ARGUMENT", Messages.CLIInterface.missingOption(String(describing: name)).localized) }
         return value
     }
-    func operand(_ index: Int = 0) throws -> String {
+    package func operand(_ index: Int = 0) throws -> String {
         guard operands.indices.contains(index) else { throw OperationFailure("INVALID_ARGUMENT", Messages.CLIInterface.missingArgument(String(describing: spec.operands[safe: index]?.name ?? String(index + 1))).localized) }
         return operands[index]
     }
@@ -166,7 +177,7 @@ struct CommandRequest: Sendable {
             throw OperationFailure("CONFIRMATION_REQUIRED", Messages.CLIInterface.confirmationRequired.localized)
         }
     }
-    func page(_ values: [Value]) -> Value {
+    package func page(_ values: [Value]) -> Value {
         let offset = integer("offset") ?? 0, limit = integer("limit") ?? 50
         let items = flag("all") ? values : Array(values.dropFirst(offset).prefix(limit))
         return .object(["items": .array(items), "total": .integer(values.count), "offset": .integer(flag("all") ? 0 : offset), "hasMore": .bool(!flag("all") && offset + items.count < values.count)])

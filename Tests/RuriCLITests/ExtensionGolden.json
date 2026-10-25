@@ -1,0 +1,74 @@
+{
+  "help-all-json.en" : {
+    "sha256" : "04a30f15b68871bdc57281612062c59c04d3e4d4fab50108a249534a1b1920bf",
+    "size" : 11784
+  },
+  "help-all-json.zh-Hans" : {
+    "sha256" : "42cec7d866384c24e36f412b733ee54b717128f9bed4c41b7e926f6c5628a60b",
+    "size" : 11582
+  },
+  "help-all.en" : {
+    "sha256" : "74ee8a4d1aa173a49a52674517db7670e3e22e02f216896028f4c1f375433d8d",
+    "size" : 11417
+  },
+  "help-all.zh-Hans" : {
+    "sha256" : "4d50107ec323673f6c14f1f37e33db7e8a8d03f7d2637003ddac97dc05307cc1",
+    "size" : 11217
+  },
+  "help-json.en" : {
+    "sha256" : "87b0a4974686eac8eb7dec65126845f7cde4a5343f07bc41049cdc2fe38d30f4",
+    "size" : 1555
+  },
+  "help-json.zh-Hans" : {
+    "sha256" : "267f4ec4038d42babdc24ab00a508d3c115f894ac59fe671c4fa4fb58a64bb8d",
+    "size" : 1360
+  },
+  "help.en" : {
+    "sha256" : "d816b0e0ca25ba73ff31959c82dcdeb5578351e8a50e2e97a2a2f95a5a4894e2",
+    "size" : 1462
+  },
+  "help.zh-Hans" : {
+    "sha256" : "03b1b13bd1537c6440333209cc936f896b63d53c47aa3a6dee4b2ab5aebddd49",
+    "size" : 1267
+  },
+  "root-help.en" : {
+    "sha256" : "d816b0e0ca25ba73ff31959c82dcdeb5578351e8a50e2e97a2a2f95a5a4894e2",
+    "size" : 1462
+  },
+  "root-help.zh-Hans" : {
+    "sha256" : "03b1b13bd1537c6440333209cc936f896b63d53c47aa3a6dee4b2ab5aebddd49",
+    "size" : 1267
+  },
+  "schema-full-json.en" : {
+    "sha256" : "78b349e7828f3a1dc33c19d26acbf7df51ac5dcc79b17cf35351a43edb4ada97",
+    "size" : 467478
+  },
+  "schema-full-json.zh-Hans" : {
+    "sha256" : "594c46a331119a45db596cf16c6134ac8c7d93c7dc88bf5be8381cbaea2546ef",
+    "size" : 466995
+  },
+  "schema-full.en" : {
+    "sha256" : "2184863c1d5c18926c039299bdff36bd353a4260d9fc0b3afa2f2f85e8679977",
+    "size" : 1022961
+  },
+  "schema-full.zh-Hans" : {
+    "sha256" : "2c7d2025ff2778dc89f7cba93d60e858965b05eb299f12b07f98a8c157ebe03a",
+    "size" : 1022430
+  },
+  "schema-json.en" : {
+    "sha256" : "2527da30c0ab513a465bbcf7808723c480c95c64a15d91635d45410228a943c0",
+    "size" : 18005
+  },
+  "schema-json.zh-Hans" : {
+    "sha256" : "94495cd61f7a5a28217037a125b6eeea7c49fabce0731db6b7b4aeb9d0ab1148",
+    "size" : 17812
+  },
+  "schema.en" : {
+    "sha256" : "e0ed9d0af3a901ecb73e1538dad253fe3602987fb1489d31bf0bfc1f4b3cff5b",
+    "size" : 11245
+  },
+  "schema.zh-Hans" : {
+    "sha256" : "317f77bcd5235cf1ea4049f5a413bc77f92a78bfaf766ae74c8fb7cec66bc2ed",
+    "size" : 11045
+  }
+}

@@ -15,7 +15,7 @@ import Testing
 
     @Test(.enabled(if: ProcessInfo.processInfo.environment["RURI_GUI_GOLDEN_APP"] != nil))
     func pagesMatchUpstream() async throws {
-        #expect(AXIsProcessTrusted(), "the test needs Accessibility access")
+        try #require(AXIsProcessTrusted(), "the test needs Accessibility access")
         // The settings page shows the data folder, so its path is the same in every run.
         let work = FileManager.default.temporaryDirectory.appendingPathComponent("ruri-gui-golden")
         try? FileManager.default.removeItem(at: work)
@@ -28,18 +28,22 @@ import Testing
         try? run("/usr/bin/defaults", ["delete", Self.identifier])
         defer { try? run("/usr/bin/defaults", ["delete", Self.identifier]) }
 
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.createsNewApplicationInstance = true
-        configuration.environment = ["RURI_DATA_DIR": work.appendingPathComponent("data").path]
-        let running = try await NSWorkspace.shared.openApplication(at: app, configuration: configuration)
-        defer { running.forceTerminate() }
+        let running = Process()
+        running.executableURL = app.appendingPathComponent("Contents/MacOS/Ruri")
+        running.environment = ProcessInfo.processInfo.environment.merging(["RURI_DATA_DIR": work.appendingPathComponent("data").path]) { _, value in value }
+        running.standardOutput = FileHandle.nullDevice
+        running.standardError = FileHandle.nullDevice
+        try running.run()
+        defer {
+            if running.isRunning { running.terminate(); running.waitUntilExit() }
+        }
         let application = AXUIElementCreateApplication(running.processIdentifier)
         AXUIElementSetMessagingTimeout(application, 5)
 
         var pages: [String: [String]] = [:]
         for page in ["home", "settings"] {
-            let window = try await Self.wait { try Self.windows(application).first }
-            let sidebar = try await Self.wait { try Self.find(window) { try Self.text($0, kAXRoleAttribute) == kAXOutlineRole } }
+            let window = try await Self.wait("main window") { try Self.windows(application).first }
+            let sidebar = try await Self.wait("sidebar") { try Self.find(window) { try Self.text($0, kAXRoleAttribute) == kAXOutlineRole } }
             let rows = try Self.children(sidebar).filter { try Self.text($0, kAXRoleAttribute) == kAXRowRole }
             // Rows follow the sidebar order: home first, settings last.
             let row = page == "home" ? rows.first! : rows.last!
@@ -81,12 +85,12 @@ import Testing
         for child in try children(element) { if let found = try find(child, depth: depth + 1, match) { return found } }
         return nil
     }
-    private static func wait<T>(_ value: () throws -> T?) async throws -> T {
+    private static func wait<T>(_ description: String, _ value: () throws -> T?) async throws -> T {
         for _ in 0..<60 {
-            if let found = try? value() { return found }
+            if let found = try value() { return found }
             try await Task.sleep(for: .milliseconds(500))
         }
-        throw CocoaError(.fileReadUnknown)
+        throw CocoaError(.fileReadUnknown, userInfo: [NSLocalizedDescriptionKey: "Timed out waiting for the GUI golden \(description)"])
     }
 
     /// Role, subrole and the visible texts of every element, in tree order.

@@ -15,7 +15,12 @@ import Testing
         ("schema-full", ["schema", "--full"]), ("schema-full-json", ["schema", "--full", "--json"]),
     ]
     nonisolated static let languages = ["en", "zh-Hans"]
-    nonisolated static let manifest = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("ExtensionGolden.json")
+    nonisolated static var manifest: URL {
+        if let path = ProcessInfo.processInfo.environment["RURI_CLI_GOLDEN_MANIFEST"] {
+            return URL(fileURLWithPath: path)
+        }
+        return URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("ExtensionGolden.json")
+    }
 
     struct Entry: Codable, Equatable {
         let sha256: String

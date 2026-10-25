@@ -35,6 +35,12 @@ install("example") { context in
 
 `Tests/RuriExtensionTests/SampleExtension.swift` implements the contribution interfaces. The tests exercise command discovery, configuration, target resolution, core hooks, UI registration and lifecycle, secure storage, and import exclusions.
 
+### Verifying an empty registration
+
+`ExtensionGoldenTests` compares all 18 discovery outputs against `ExtensionGolden.json`. When checking a different toolchain or build configuration, set `RURI_CLI_GOLDEN_MANIFEST` to a manifest captured from upstream main with that same configuration. A missing or invalid manifest fails the test. Record expected output only from an upstream main build; `RURI_RECORD_GOLDEN=1` writes the selected manifest.
+
+For the sidebar, home and settings pages, set `RURI_GUI_GOLDEN_APP` to the app being checked and run `GUIGoldenTests` with Accessibility access. To update `GUIGolden.json`, point it at a build of upstream main and set `RURI_RECORD_GOLDEN=1`, then run again against the extension branch without the recording flag. The test uses an isolated app copy and data directory.
+
 ### Localization
 
 An extension keeps its String Catalogs in `Sources/<Module>/Localization/Resources/*.xcstrings` and declares them in `Package.swift` with `.process("Localization/Resources")`. `scripts/localization.py` checks them together with the host's catalogs and generates `Messages` accessors in `Sources/<Module>/Localization/Generated`; table names must differ from the host's and other extensions'. At registration the extension calls `LocalizationCatalogRegistry.register(table:definitions:bundle:)` for each table, with the `Ruri_<Module>.bundle` that `LocalizationResources.installedBundle(executable:mainResources:name:)` finds. The application's `--localization-check` covers the registered tables as well. Builds without Xcode compile each module's bundle with `scripts/localization.py --compile <bundle>`.

@@ -62,8 +62,8 @@ package enum CommandSchemas {
         return .object(schema)
     }
     static func sideEffects(_ spec: CommandSpec) -> [String] {
-        guard spec.mutation else { return [] }
         if let effects = ExperimentalCommandRegistry.sideEffects(spec) { return effects }
+        guard spec.mutation else { return [] }
         switch spec.path.first {
         case "config": return ["configuration"]
         case "app": return ["preferences"]

@@ -58,6 +58,9 @@ final class Capture: @unchecked Sendable {
         #expect(payload["properties"]["notes"]["type"] == .string("integer"))
         let descriptor = try await json(["schema", "sample", "note"])
         #expect(descriptor["data"]["commands"].elements[0]["sideEffects"] == .array([.string("configuration")]))
+        let queryDescriptor = try await json(["schema", "sample", "status"])
+        #expect(queryDescriptor["data"]["commands"].elements[0]["mutation"] == .bool(false))
+        #expect(queryDescriptor["data"]["commands"].elements[0]["sideEffects"] == .array([.string("configuration")]))
         let completion = try await json(["completions", "zsh"])
         #expect(completion["data"]["script"].string?.contains("sample") == true)
 
